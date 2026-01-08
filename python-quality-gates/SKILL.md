@@ -10,7 +10,7 @@ Project-agnostic bash script enforcing Python code quality gates using ruff, pyr
 Before committing Python code to ensure consistent quality checks, catch issues early, enforce standards across projects without assumptions about directory structure.
 
 ## Core Pattern
-Run the script with a mode: `./quality-gates.sh unit-tests` for fast static + unit tests, `all-tests` for full validation, `no-tests` for lint/type/complexity only.
+Run the script with a mode: `~.config/opencode/skill/python-quality-gates/scripts/quality-gates.sh unit-tests` for fast static + unit tests, `all-tests` for full validation, `no-tests` for lint/type/complexity only.
 
 ## Quick Reference
 | Mode | Gates Run | Use Case |
