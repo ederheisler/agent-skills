@@ -182,6 +182,25 @@ Create museum-quality visual art in PNG and PDF using design philosophy principl
 
 ---
 
+### 11. **quality-gates**
+Project-agnostic Python quality gates script for comprehensive code quality assurance.
+
+**Features:**
+- Bash script enforcing Python code quality gates
+- Supports ruff (linting), pyrefly (type checking), radon (complexity)
+- Hypothesis checks, pytest (testing), markdownlint (docs)
+- Three modes: unit-tests (fast), all-tests (comprehensive), no-tests (static only)
+- Graceful fallbacks when tools are missing
+- Excludes common directories (tests, docs, build)
+
+**Structure:**
+- `SKILL.md` - Complete usage guide with modes and common pitfalls
+- `scripts/quality-gates.sh` - Executable quality gates script
+
+**Origin:** Original skill created for Python code quality assurance
+
+---
+
 ## Progressive Disclosure Principle
 
 All skills in this collection follow **progressive disclosure** design:
@@ -227,8 +246,9 @@ All skills in this collection follow **progressive disclosure** design:
 | webapp-testing | ~150 | 6 (examples + scripts) | 7 |
 | internal-comms | ~30 | 6 (examples) | 7 |
 | canvas-design | ~250 | 83 (fonts) | 84 |
+| quality-gates | ~60 | 2 (scripts) | 3 |
 
-**Total: 10 skills, 235 files**
+**Total: 11 skills, 238 files**
 
 ---
 
