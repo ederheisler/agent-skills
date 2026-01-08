@@ -68,7 +68,7 @@ All skills in this collection follow **progressive disclosure** design:
 1. **Level 1: Metadata** (~100 words)
    - Name and description
    - Always loaded in context
-   - Helps Claude decide when to use the skill
+   - Helps the agent decide when to use the skill
 
 2. **Level 2: Core SKILL.md** (<500 lines)
    - Essential workflow and guidance
