@@ -6,6 +6,8 @@ license: Complete terms in LICENSE.txt
 
 # Frontend Design
 
+> **Note**: This skill is based on [Anthropic's frontend-design skill](https://github.com/anthropics/skills/tree/main/skills/frontend-design), enhanced with progressive disclosure and extensive reference materials.
+
 Create distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 
 ## Core Workflow
