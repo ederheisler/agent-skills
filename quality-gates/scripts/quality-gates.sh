@@ -7,7 +7,7 @@ set -e
 EXCLUDES="tests,test,docs,doc,examples,scripts,build,dist,.venv,venv,.tox,.git,node_modules,__pycache__,*.egg-info"
 
 usage() {
-    cat <<'EOF'
+    cat <<'USAGE'
 Usage: ./quality-gates.sh <mode>
 
 Modes:
@@ -19,7 +19,7 @@ For AI agents: choose explicitly to control test scope.
   - unit-tests: fast feedback, catches logic/model errors
   - all-tests: comprehensive validation before merge/deploy
   - no-tests: lint/type/complexity only (when time is critical)
-EOF
+USAGE
 }
 
 mode="${1:-}"
@@ -31,31 +31,26 @@ fi
 
 echo "Running Python quality gates (${mode})..."
 
-install_test_deps() {
-    if ! uv run python -c "import pytest" 2>/dev/null; then
-        echo "Installing test dependencies..."
-        uv sync --extra test
-    fi
-}
-
 run_static_gates() {
     echo "Running ruff..."
     if command -v uvx >/dev/null 2>&1; then
         uvx ruff check . --fix
     else
-        echo "uvx not found, skipping ruff"
+        echo "uvx not fINSTALL TO CONTINUE"
+        exit 1
     fi
 
     echo "Running type checking with pyrefly..."
     if command -v uvx >/dev/null 2>&1; then
-        uvx pyrefly check .
+        uvx pyrefly check . --project-excludes="tests" --project-excludes="test_*.py"
     else
-        echo "uvx not found, skipping pyrefly"
+        echo "uvx not found, INSTALL TO CONTINUE"
+        exit 1 
     fi
 
     echo "Running radon complexity analysis..."
-    if command -v uv >/dev/null 2>&1; then
-        radon_output=$(uv run radon cc . --ignore="$EXCLUDES" --min C --total-average --show-complexity 2>/dev/null || echo "radon failed")
+    if command -v uvx >/dev/null 2>&1; then
+        radon_output=$(uvx radon cc . --ignore="$EXCLUDES" --min C --total-average --show-complexity 2>/dev/null || echo "radon failed")
         complexity_issues=$(echo "$radon_output" | grep -v "blocks (classes, functions, methods) analyzed" | grep -v "Average complexity:" | grep -E "[CDF]" || true)
         if [ -n "$complexity_issues" ]; then
             echo "$radon_output"
@@ -71,39 +66,44 @@ run_static_gates() {
             echo "$radon_output"
         fi
     else
-        echo "uv not found, skipping radon"
+        echo "uvx not found, INSTALL TO CONTINUE"
+        exit 1 
     fi
 
-    echo "Checking hypothesis test structure..."
-    if [ -f "scripts/check_hypothesis_tests.sh" ]; then
-        bash scripts/check_hypothesis_tests.sh
-    else
-        echo "check_hypothesis_tests.sh not found, skipping hypothesis structure check"
+    echo "Checking for hypothesis @given tests outside of *_property.py files..."
+    violations=$(grep -r "@given" tests/ --include="*.py" 2>/dev/null | grep -v "_property.py" || true)
+    if [ -n "$violations" ]; then
+        echo "❌ Error: Hypothesis @given tests found outside of *_property.py files. Property tests must be in dedicated *_property.py files."
+        echo "$violations"
+        exit 1
     fi
 
-    echo "Checking hypothesis suppression..."
-    if [ -f "scripts/check_suppress_health.sh" ]; then
-        bash scripts/check_suppress_health.sh
-    else
-        echo "check_suppress_health.sh not found, skipping hypothesis suppression check"
+    echo "Checking for suppress_health decorators in non-test files..."
+    # Check for suppress_health decorators in test files
+    if grep -r "suppress_health\|@suppress()" tests/ --include="*.py" 2>/dev/null; then
+        echo "❌ Error: suppress_health decorator found in test files. Tests should be properly written without suppressors."
+        exit 1
     fi
+
 }
 
 run_tests() {
     echo "Running unit tests..."
     if command -v uv >/dev/null 2>&1; then
-        uv run python -m pytest tests/unit/ --no-cov -x -W error::DeprecationWarning -W error::PendingDeprecationWarning
+        uvx run python -m pytest tests/unit/ --no-cov -x -W error::DeprecationWarning -W error::PendingDeprecationWarning
     else
-        echo "uv not found, skipping pytest"
+        echo "uv not found, INSTALL TO CONTINUE"
+        exit 1 
     fi
 }
 
 run_all_tests() {
     echo "Running all tests (unit + integration)..."
-    if command -v uv >/dev/null 2>&1; then
-        uv run python -m pytest tests/ --no-cov -x -W error::DeprecationWarning -W error::PendingDeprecationWarning
+    if command -v uvx >/dev/null 2>&1; then
+        uvx run python -m pytest tests/ --no-cov -x -W error::DeprecationWarning -W error::PendingDeprecationWarning
     else
-        echo "uv not found, skipping pytest"
+        echo "uv not found, INSTALL TO CONTINUE"
+        exit 1 
     fi
 }
 
@@ -112,20 +112,19 @@ run_markdownlint() {
     if command -v markdownlint >/dev/null 2>&1; then
         markdownlint --fix .
     else
-        echo "markdownlint not found, skipping"
+        echo "markdownlint not found, INSTALL TO CONTINUE"
+        exit 1 
     fi
 }
 
 case "$mode" in
     unit-tests)
-        install_test_deps
         run_static_gates
         run_tests
         run_markdownlint
         echo "Unit test quality gates passed! ✅"
         ;;
     all-tests)
-        install_test_deps
         run_static_gates
         run_all_tests
         run_markdownlint

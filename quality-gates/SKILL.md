@@ -1,57 +1,68 @@
+---
 name: quality-gates
-description: Use when needing project-agnostic Python quality gates script for linting, type checking, complexity analysis, hypothesis checks, testing, and docs linting before commits.
+description: Python code quality gates script for linting, type checking, complexity analysis, and testing before commits. Use when enforcing consistent code quality across Python projects with fast (unit-tests) or comprehensive (all-tests) modes.
+license: Complete terms in LICENSE.txt
+---
 
 # Quality Gates
 
 ## Overview
-Project-agnostic bash script enforcing Python code quality gates using ruff, pyrefly, radon, hypothesis checks, pytest, markdownlint. Modes allow fast runs (unit-tests for quick feedback, all-tests for comprehensive validation, no-tests for static only) to avoid context pollution between tasks.
+
+Project-agnostic bash script enforcing Python code quality gates using ruff, pyrefly, radon, hypothesis, pytest, and markdownlint. Three execution modes provide flexibility for different workflows: unit-tests for fast feedback, all-tests for comprehensive pre-merge validation, no-tests for static analysis only.
 
 ## When to Use
-Before committing Python code to ensure consistent quality checks, catch issues early, enforce standards across projects without assumptions about directory structure.
 
-## Core Pattern
-Run the script with a mode: `~.config/opencode/skill/quality-gates/scripts/quality-gates.sh unit-tests` for fast static + unit tests, `all-tests` for full validation, `no-tests` for lint/type/complexity only.
+Before committing Python code to enforce consistent quality checks across projects without directory structure assumptions.
 
-## Quick Reference
-| Mode | Gates Run | Use Case |
-|------|-----------|----------|
-| unit-tests | ruff, pyrefly, radon, hypothesis, pytest unit/, markdownlint | Fast feedback between tasks |
-| all-tests | ruff, pyrefly, radon, hypothesis, pytest all, markdownlint | Pre-merge/deploy comprehensive check |
-| no-tests | ruff, pyrefly, radon, hypothesis, markdownlint | Static analysis only when time critical |
+## Modes
 
-## Implementation
-See quality-gates.sh for the script. Uses uv/uvx for tools, excludes common dirs like tests, docs, build. Graceful fallbacks if tools missing.
+| Mode           | Gates Run                                                                            | Use Case                             |
+|----------------|--------------------------------------------------------------------------------------|--------------------------------------|
+| **unit-tests** | ruff, pyrefly, radon, hypothesis checks, pytest (unit/), markdownlint                | Fast feedback during development     |
+| **all-tests**  | ruff, pyrefly, radon, hypothesis checks, pytest (unit/ + integration/), markdownlint | Pre-merge/deploy comprehensive check |
+| **no-tests**   | ruff, pyrefly, radon, hypothesis checks, markdownlint                                | Static analysis only (time critical) |
 
-**For AI agents:** Check AGENTS.md for project-specific instructions. Load available superpowers skills and MCP tools (e.g., serena) before running gates.
+## Quick Start
 
-## Common Mistakes
-- Running full all-tests too often slows down iteration.
-- Skipping modes under pressure; use no-tests for urgent static checks.
-- Not excluding non-code dirs leads to false positives.
+**Running quality gates:**
 
-## Common Rationalizations
-| Excuse | Reality |
-|--------|---------|
-| "Time-critical, skip checks" | Use no-tests mode for fast static validation. |
-| "Already tested manually" | Automation ensures consistency; manual misses edge cases. |
-| "Partial checks good enough" | Modes provide full coverage options; skipping hypothesis misses bugs. |
-| "Static sufficient, skip tests" | Use no-tests mode explicitly; tests catch logic errors. |
-| "Too slow, skip radon/type" | Tools are fast; skipping misses complexity/type issues. |
-| "Script not in project" | Download/copy to project; run locally. |
-| "Tools not installed" | Graceful fallbacks skip missing tools; install uv for full coverage. |
-| "Modes confusing" | unit-tests fast, all-tests comprehensive, no-tests static only. |
-| "Project doesn't need this" | All Python projects benefit from quality gates. |
+Make sure uv is installed.
 
-## Red Flags - STOP and Start Over
+```bash
+# Fast feedback: lint + type check + unit tests
+.claude/skills/quality-gates/scripts/quality-gates.sh unit-tests
+
+# Pre-merge: everything including integration tests
+.claude/skills/quality-gates/scripts/quality-gates.sh all-tests
+
+# Quick static checks only
+.claude/skills/quality-gates/scripts/quality-gates.sh no-tests
+```
+
+## Implementation Details
+
+- **Script**: `scripts/quality-gates.sh` - Uses uv/uvx for tool management
+- **Excluded directories**: tests, test, docs, doc, examples, scripts, build, dist, .venv, venv, .tox, .git, node_modules, **pycache**, *.egg-info
+- **Graceful fallbacks**: Skips missing tools without failing
+
+## Common Anti-Patterns
+
+| Rationalization              | Reality                                                              |
+|------------------------------|----------------------------------------------------------------------|
+| "Time-critical, skip checks" | Use no-tests mode for fast static validation                         |
+| "Already tested manually"    | Automation catches edge cases manual testing misses                  |
+| "Partial checks sufficient"  | Modes provide full coverage options; incomplete coverage misses bugs |
+| "Too slow"                   | Tools are fast; skipping misses complexity and type issues           |
+| "Script not in project"      | Copy to project to .claude/; run locally                             |
+| "Tools not installed"        | Install uv; graceful fallbacks skip missing tools                    |
+
+## Red Flags
+
+Stop and re-evaluate if you're:
+
 - Skipping all checks
-- Running partial without mode
-- "Already did it manually"
+- "This time is different"
 - "Good enough for now"
-- "Static checks sufficient"
-- "Tests take too long"
-- "Script not available"
-- "Tools missing anyway"
-- "Modes too confusing"
-- Rationalizing under pressure
+- Rationalizing under deadline pressure
 
-All mean run the script with appropriate mode.
+All of these suggest running the script with the appropriate mode.
