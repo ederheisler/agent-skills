@@ -355,8 +355,8 @@ class SkillListScreen(Screen):
                 # Yellow checkmark + Red ✕ to show it will be removed
                 marker = "[yellow]✓[/yellow][red]✕[/red]"
             else:
-                # Red ✕ to show it will be installed
-                marker = "[red]✕[/red]"
+                # Yellow ✕ to show it will be installed
+                marker = "[yellow]✕[/yellow]"
         else:
             if item.is_installed:
                 # Yellow checkmark for installed
