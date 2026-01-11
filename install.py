@@ -596,6 +596,18 @@ class SkillListScreen(Screen):
                         )
                         if plugin_target.exists():
                             plugin_target.unlink()
+                            logger.info(f"✓ Removed plugin symlink: {plugin_target}")
+                            # Show individual plugin removal notification
+                            self.app.notify(
+                                f"Plugin removed from {plugin_target}",
+                                title="✅ Plugin Removed",
+                                severity="information",
+                                timeout=4.0,
+                            )
+                        else:
+                            logger.warning(
+                                f"Plugin symlink not found for removal: {plugin_target}"
+                            )
                         debug_log.append(f"Removed plugin {skill_name}")
                     else:
                         plugins_to_install.append(skill_name)
@@ -719,19 +731,17 @@ class SkillListScreen(Screen):
         self.selected_skills.clear()
         self._update_header()
 
-        # Show success notification for skills (plugins show their own notifications)
+        # Show success notification for skills only (plugins show their own notifications)
         if skills_to_install or skills_to_remove:
             if skills_to_install and skills_to_remove:
-                msg = f"Skills: Installed {len(skills_to_install)}, Removed {len(skills_to_remove)}"
+                msg = f"Installed {len(skills_to_install)}, Removed {len(skills_to_remove)}"
             elif skills_to_install:
-                msg = f"Skills: Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
+                msg = f"Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
             else:
-                msg = f"Skills: Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
+                msg = f"Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
 
             logger.info(f"Success: {msg}")
-            self.notify(
-                msg, title="✅ Skills Success", severity="information", timeout=6.0
-            )
+            self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
 
         # Also update header to show new count
         try:
