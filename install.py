@@ -414,53 +414,6 @@ class SkillListScreen(Screen):
         try:
             header_info = self.query_one("#header-info", Label)
             header_info.update(self._get_header_info())
-            logger.debug("Header updated")
-        except Exception as e:
-            logger.error(f"Exception updating header: {e}", exc_info=True)
-
-        if errors:
-            self.notify(
-                f"Error: {errors[0][:40]}",
-                title="❌ Failed",
-                severity="error",
-                timeout=4.0,
-            )
-            return
-
-        # Update state
-        self.installed = get_installed_skills(DESTINATION)
-        debug_log.append(f"Updated installed: {self.installed}")
-
-        # Clear selections and refresh display
-        try:
-            list_view = self.query_one(ListView)
-            for i, item in enumerate(list_view.children):
-                if isinstance(item, SkillItem):
-                    item.selected = False
-                    item.is_installed = item.skill.dir_name in self.installed
-                    self._update_item_display(item)
-                    debug_log.append(f"Updated item {i}: {item.skill.dir_name}")
-        except Exception as e:
-            debug_log.append(f"Exception updating items: {e}")
-
-        self.selected_skills.clear()
-
-        # Show success message
-        if to_install and to_remove:
-            msg = f"✓ SUCCESS: Installed {len(to_install)}, Removed {len(to_remove)}"
-        elif to_install:
-            msg = f"✓ SUCCESS: Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
-        else:
-            msg = f"✓ SUCCESS: Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
-
-        debug_log.append(f"Updating footer with: {msg}")
-        footer_left.update(f"[bold green]{msg}[/bold green]")
-        debug_log.append("Footer updated")
-
-        # Also update header to show new count
-        try:
-            header_info = self.query_one("#header-info", Label)
-            header_info.update(self._get_header_info())
             debug_log.append("Header updated")
         except Exception as e:
             debug_log.append(f"Exception updating header: {e}")
