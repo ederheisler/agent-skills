@@ -117,8 +117,11 @@ class SkillItem(ListItem):
         self.selected = False
 
         # Create label text with full description
-        # Use ✓ inside brackets for installed, space for not installed
-        status = "✓" if is_installed else " "
+        # Use green ✓ for installed, space for not installed
+        if is_installed:
+            status = "[green]✓[/green]"
+        else:
+            status = "[ ]"
         label_text = f"[{status}] {skill.name}"
         if skill.description:
             # Truncate description to fit reasonably in terminal
@@ -324,9 +327,19 @@ class SkillListScreen(Screen):
         # When selected: add X to show it's marked for action
         # Keep the original status (✓ for installed, space for not)
         if item.selected:
-            marker = f"✓X" if item.is_installed else "X"
+            if item.is_installed:
+                # Red X to show it will be removed
+                marker = f"[green]✓[/green][red]X[/red]"
+            else:
+                # Green X to show it will be installed
+                marker = "[green]X[/green]"
         else:
-            marker = "✓" if item.is_installed else " "
+            if item.is_installed:
+                # Green checkmark for installed
+                marker = "[green]✓[/green]"
+            else:
+                # Space for not installed
+                marker = "[ ]"
 
         text = f"[{marker}] {item.skill.name}"
         if item.skill.description:
