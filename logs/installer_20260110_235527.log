@@ -23,3 +23,17 @@
 2026-01-10 23:55:30,817 - __main__ - DEBUG - Key pressed: space
 2026-01-10 23:55:30,817 - __main__ - DEBUG - Action: toggle_skill
 2026-01-10 23:55:30,817 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-10 23:55:47,437 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:55:47,437 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:55:47,437 - __main__ - INFO - Toggled skill: brainstorming, selected=True
+2026-01-10 23:55:47,860 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:55:47,860 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:55:47,860 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-10 23:55:48,160 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:55:48,160 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:55:48,160 - __main__ - INFO - Toggled skill: brainstorming, selected=True
+2026-01-10 23:55:48,476 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:55:48,477 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:55:48,477 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-10 23:55:48,772 - __main__ - DEBUG - Key pressed: q
+2026-01-10 23:55:48,772 - __main__ - INFO - Action: quit
