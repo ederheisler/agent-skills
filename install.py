@@ -170,12 +170,48 @@ class SkillItem(ListItem):
         return f"{marker_col}{title_col}{desc_col}"
 
 
+class DescriptionModal(Screen):
+    """Modal to show full skill description"""
+
+    BINDINGS = [
+        Binding("escape", "close_modal", "Close", show=True),
+    ]
+
+    def __init__(self, skill: SkillInfo):
+        super().__init__()
+        self.skill = skill
+
+    def compose(self):
+        """Show skill title and full description"""
+        from textual.widgets import Static, Button
+        from textual.containers import Vertical, Center
+
+        with Vertical():
+            yield Static(f"[bold blue]{self.skill.name}[/bold blue]", id="title")
+            yield Static("", id="separator")  # Spacer
+            yield Static(
+                self.skill.description or "No description available.", id="description"
+            )
+            with Center():
+                yield Button("Close (ESC)", id="close_btn")
+
+    def on_button_pressed(self, event):
+        """Handle button press"""
+        if event.button.id == "close_btn":
+            self.app.pop_screen()
+
+    def action_close_modal(self):
+        """Close the modal"""
+        self.app.pop_screen()
+
+
 class SkillListScreen(Screen):
     """Main screen for selecting and installing skills"""
 
     BINDINGS = [
         Binding("space", "toggle_skill", "Toggle", show=True),
         Binding("enter", "execute_install", "Apply", show=True),
+        Binding("e", "show_description", "Description", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
 
@@ -483,6 +519,19 @@ class SkillListScreen(Screen):
             header_title.update(self._get_title())
         except Exception:
             pass
+
+    def action_show_description(self) -> None:
+        """Show description of currently selected skill in a modal"""
+        try:
+            list_view = self.query_one(ListView)
+            if list_view.index is not None:
+                item = list_view.children[list_view.index]
+                if isinstance(item, SkillItem):
+                    # Create and show description modal
+                    modal = DescriptionModal(item.skill)
+                    self.app.push_screen(modal)
+        except Exception as e:
+            logger.error(f"Error showing description: {e}")
 
     def action_quit(self) -> None:
         logger.info("Action: quit")
