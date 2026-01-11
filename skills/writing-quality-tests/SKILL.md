@@ -18,6 +18,7 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 - Hardening flaky tests or slow suites
 - Reviewing test submissions for clarity, coverage, and maintainability
 - Choosing between unit, contract, integration, or end-to-end coverage for a change
+- Not for manual exploratory testing or load/perf-only work; use this for automated behavioral/regression checks
 
 ## Non-Negotiables
 
@@ -29,6 +30,7 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 
 ## Workflow
 
+0) Prove it fails: capture the regression input or wished-for case and watch the test fail first (or reproduce the bug) before code changes.
 1) Clarify behavior: preconditions, action, postconditions, invariants. Capture regression input if fixing a bug.
 2) Pick level: unit for pure logic; contract for external calls; integration for seams; E2E only to prove flows or contracts end-to-end.
 3) Design oracle: assert outputs, state, events, and invariants; avoid implementation details or transient UI.
@@ -76,6 +78,14 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 - Async correctness: use real async paths/fakes; don’t hide missing awaits with sync doubles.
 - Assertion scope: assert behavior/contract fields; avoid brittle full-payload snapshots unless testing a contract.
 - Coverage as health, not blocker: focus on low-coverage behavior-heavy files; be pragmatic with legacy or infra-heavy areas.
+
+### Marks (for selective runs)
+
+- unit: isolated logic with external deps mocked
+- contract/integration: cross-component seams with real wiring or adapters
+- async: true async paths; avoid sync fakes masking awaits
+- property: Hypothesis-based invariants in dedicated property files
+- slow: >1s or real infra; justify and keep focused
 
 ## Common Anti-Patterns
 

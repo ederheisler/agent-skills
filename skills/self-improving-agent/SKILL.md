@@ -7,6 +7,30 @@ description: "Captures learnings, errors, and corrections to enable continuous i
 
 Log learnings and errors to markdown files for continuous improvement. Coding agents can later process these into fixes, and important learnings get promoted to project memory.
 
+**Not for** general Q&A, coding tasks, or ad-hoc reasoning. Use only to log, review, and promote learnings/errors/feature requests.
+
+**Context discipline:** Do not open whole log files; append directly or read only a small slice around the target entry.
+
+## Memory Index (progressive loading)
+
+| Purpose | Path |
+|---------|------|
+| Learnings log | .learnings/LEARNINGS.md |
+| Errors log | .learnings/ERRORS.md |
+| Feature requests | .learnings/FEATURE_REQUESTS.md |
+| Formats reference | references/formats.md |
+| Examples | references/examples.md |
+| Promotion guide | references/promotion.md |
+| Review workflow | references/review.md |
+
+Maintain this table when adding new reference files; keep descriptions short so only the needed file is opened.
+
+## Progressive Loading Rules
+
+- Do not load whole log files by default. Append directly to the correct file; if you must inspect, read only the relevant entry or a small surrounding slice.
+- Use grep/search first to find matching IDs or keywords before opening anything large.
+- Only load reference files (formats/examples/promotion/review) when you need their content.
+
 ## Quick Reference
 
 | Situation | Action | Details |
@@ -42,9 +66,10 @@ Templates available in `assets/` directory.
 
 When you encounter a triggering situation:
 
+0. **Search first**: `grep -r "keyword" .learnings/` to avoid duplicates; link if related.
 1. Determine entry type (learning, error, or feature request)
 2. Generate ID: `TYPE-YYYYMMDD-XXX` (e.g., `LRN-20250108-001`)
-3. Append entry to appropriate file
+3. Append entry to appropriate file without loading the full file; if you need context, read only the nearby lines for the target section.
 4. Use the format from [references/formats.md](references/formats.md)
 
 **Quick format overview:**
