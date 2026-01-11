@@ -35,7 +35,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE),
-        logging.StreamHandler(),
     ],
 )
 
@@ -156,7 +155,6 @@ class SkillListScreen(Screen):
 
     BINDINGS = [
         Binding("space", "toggle_skill", "Toggle", show=True),
-        Binding("escape", "clear_selections", "Clear All", show=True),
         Binding("enter", "execute_install", "Apply", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
@@ -258,18 +256,17 @@ class SkillListScreen(Screen):
                 yield Static(self._get_footer_right(), id="footer-right")
 
     def _get_title(self) -> str:
+        if self.selected_skills:
+            install = len([s for s in self.selected_skills if s not in self.installed])
+            remove = len([s for s in self.selected_skills if s in self.installed])
+            return f"📦 Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})"
         return f"📦 Skills Manager"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer_left(self) -> str:
-        if not self.selected_skills:
-            return "Space: Toggle  Enter: Apply  Esc: Clear  Q: Quit"
-
-        install = len([s for s in self.selected_skills if s not in self.installed])
-        remove = len([s for s in self.selected_skills if s in self.installed])
-        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})"
+        return "Space: Toggle  Enter: Apply  Q: Quit"
 
     def _get_footer_right(self) -> str:
         return str(DESTINATION)
@@ -307,22 +304,9 @@ class SkillListScreen(Screen):
                     # Update item display
                     self._update_item_display(item)
                     self._update_footer()
+                    self._update_header()
         except Exception as e:
             logger.error(f"Error in toggle_skill: {e}", exc_info=True)
-
-    def action_clear_selections(self) -> None:
-        """Clear all selections"""
-        try:
-            list_view = self.query_one(ListView)
-            for item in list_view.children:
-                if isinstance(item, SkillItem):
-                    item.selected = False
-                    self._update_item_display(item)
-
-            self.selected_skills.clear()
-            self._update_footer()
-        except Exception:
-            pass
 
     def action_execute_install(self) -> None:
         """Execute the installation/removal of selected skills"""
@@ -389,15 +373,14 @@ class SkillListScreen(Screen):
                 errors.append(f"{skill_name}: {str(e)}")
 
         if errors:
-            msg = f"❌ Error: {errors[0][:40]}"
+            msg = f"Error: {errors[0][:40]}"
             logger.error(f"Installation failed: {errors}")
-            footer_left.update(msg)
+            self.notify(msg, title="❌ Failed", severity="error", timeout=4.0)
             return
 
         # Update state
         self.installed = get_installed_skills(DESTINATION)
         logger.info(f"Updated installed: {self.installed}")
-        debug_log.append(f"Updated installed: {self.installed}")
 
         # Clear selections and refresh display
         try:
@@ -412,17 +395,20 @@ class SkillListScreen(Screen):
             logger.error(f"Exception updating items: {e}", exc_info=True)
 
         self.selected_skills.clear()
+        self._update_header()
 
-        # Show success message
+        # Show success notification
         if to_install and to_remove:
-            msg = f"✓ SUCCESS: Installed {len(to_install)}, Removed {len(to_remove)}"
+            msg = f"Installed {len(to_install)}, Removed {len(to_remove)}"
         elif to_install:
-            msg = f"✓ SUCCESS: Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+            msg = (
+                f"Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+            )
         else:
-            msg = f"✓ SUCCESS: Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
+            msg = f"Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
         logger.info(f"Success: {msg}")
-        footer_left.update(f"[bold green]{msg}[/bold green]")
+        self.notify(msg, title="✅ Success", severity="information", timeout=3.0)
 
         # Also update header to show new count
         try:
@@ -433,7 +419,12 @@ class SkillListScreen(Screen):
             logger.error(f"Exception updating header: {e}", exc_info=True)
 
         if errors:
-            footer_left.update(f"❌ Error: {errors[0][:40]}")
+            self.notify(
+                f"Error: {errors[0][:40]}",
+                title="❌ Failed",
+                severity="error",
+                timeout=4.0,
+            )
             return
 
         # Update state
@@ -513,6 +504,14 @@ class SkillListScreen(Screen):
         try:
             footer_left = self.query_one("#footer-left", Static)
             footer_left.update(self._get_footer_left())
+        except Exception:
+            pass
+
+    def _update_header(self) -> None:
+        """Update the header messages"""
+        try:
+            header_title = self.query_one("#header-title", Label)
+            header_title.update(self._get_title())
         except Exception:
             pass
 

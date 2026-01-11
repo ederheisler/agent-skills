@@ -1,0 +1,20 @@
+2026-01-10 23:52:27,280 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-01-10 23:52:27,285 - __main__ - INFO - === InstallerApp mounted ===
+2026-01-10 23:52:27,285 - __main__ - INFO - === SkillListScreen initialized ===
+2026-01-10 23:52:27,290 - __main__ - INFO - Available skills: 27
+2026-01-10 23:52:27,290 - __main__ - INFO - Installed skills: {'brainstorming', 'canvas-design', 'quality-gates'}
+2026-01-10 23:52:27,290 - __main__ - INFO - Destination: /Users/eder/Code/.config/opencode/skill
+2026-01-10 23:52:34,888 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:35,728 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:35,952 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:36,131 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:36,702 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:36,929 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:37,121 - __main__ - DEBUG - Key pressed: escape
+2026-01-10 23:52:47,619 - __main__ - DEBUG - Key pressed: up
+2026-01-10 23:52:47,824 - __main__ - DEBUG - Key pressed: enter
+2026-01-10 23:52:47,824 - __main__ - DEBUG - Enter key detected, calling action_execute_install
+2026-01-10 23:52:47,824 - __main__ - INFO - Action: execute_install, selected=set()
+2026-01-10 23:52:47,824 - __main__ - DEBUG - No selected skills
+2026-01-10 23:52:48,608 - __main__ - DEBUG - Key pressed: q
+2026-01-10 23:52:48,608 - __main__ - INFO - Action: quit
