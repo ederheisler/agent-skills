@@ -732,14 +732,15 @@ class SkillListScreen(Screen):
         self._update_header()
 
         # Show success notification for skills only (plugins show their own notifications)
-        if skills_to_install or skills_to_remove:
+        if skills_to_remove:
+            msg = f"Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
+            logger.info(f"Success: {msg}")
+            self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
+        elif skills_to_install:
             if skills_to_install and skills_to_remove:
                 msg = f"Installed {len(skills_to_install)}, Removed {len(skills_to_remove)}"
-            elif skills_to_install:
-                msg = f"Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
             else:
-                msg = f"Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
-
+                msg = f"Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
             logger.info(f"Success: {msg}")
             self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
 
