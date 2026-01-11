@@ -314,6 +314,7 @@ class SkillListScreen(Screen):
         to_remove = [s for s in self.selected_skills if s in self.installed]
 
         # Execute operations
+        errors = []
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
@@ -340,8 +341,11 @@ class SkillListScreen(Screen):
                     DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
             except Exception as e:
-                footer_left.update(f"❌ Error: {str(e)[:50]}")
-                return
+                errors.append(f"{skill_name}: {str(e)}")
+
+        if errors:
+            footer_left.update(f"❌ Error: {errors[0][:40]}")
+            return
 
         # Update state
         self.installed = get_installed_skills(DESTINATION)
@@ -364,6 +368,13 @@ class SkillListScreen(Screen):
             msg = f"✓ Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
         footer_left.update(msg)
+
+        # Also update header to show new count
+        try:
+            header_info = self.query_one("#header-info", Label)
+            header_info.update(self._get_header_info())
+        except Exception:
+            pass
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
