@@ -133,45 +133,37 @@ class SkillItem(ListItem):
         self.is_installed = is_installed
         self.selected = False
 
-        super().__init__()
+        # Create formatted text with 3 columns: marker | title | description
+        text = self._format_skill_text()
+        super().__init__(Label(text))
 
-    def compose(self):
-        """Create 3-column layout: marker | title | description"""
-        with Horizontal():
-            # Column 1: Selection marker (fixed width)
-            marker_text = self._get_marker_text()
-            yield Static(marker_text, id="marker", classes="column-marker")
-
-            # Column 2: Skill title (fixed width)
-            title_text = f"{self.skill.name:<20}"  # Pad to 20 chars
-            yield Static(title_text, id="title", classes="column-title")
-
-            # Column 3: Description (remaining space)
-            desc_text = self._get_description_text()
-            yield Static(desc_text, id="description", classes="column-description")
-
-    def _get_marker_text(self) -> str:
-        """Get the marker symbol for current state"""
+    def _format_skill_text(self) -> str:
+        """Format skill as 3-column text: marker(4) | title(20) | description"""
+        # Column 1: Marker (4 chars wide)
         if self.selected:
             if self.is_installed:
-                return "[yellow]o[/yellow][red]✖[/red]"
+                marker = "[yellow]o[/yellow][red]✖[/red]"
             else:
-                return "[white]✓[/white]"
+                marker = "[white]✓[/white]"
         else:
             if self.is_installed:
-                return "[yellow]o[/yellow]"
+                marker = "[yellow]o[/yellow]"
             else:
-                return " "
+                marker = " "
+        marker_col = f"{marker:<4}"
 
-    def _get_description_text(self) -> str:
-        """Get formatted description text"""
+        # Column 2: Title (20 chars wide)
+        title_col = f"{self.skill.name:<20}"
+
+        # Column 3: Description (remaining space)
+        desc_col = ""
         if self.skill.description:
-            # Truncate to fit column
             desc = self.skill.description[:50]
             if len(self.skill.description) > 50:
                 desc += "…"
-            return f" — {desc}"
-        return ""
+            desc_col = f" — {desc}"
+
+        return f"{marker_col}{title_col}{desc_col}"
 
 
 class SkillListScreen(Screen):
@@ -464,16 +456,13 @@ class SkillListScreen(Screen):
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
-        try:
-            # Update marker column
-            marker_widget = item.query_one("#marker", Static)
-            marker_widget.update(item._get_marker_text())
+        # Rebuild the formatted text
+        text = item._format_skill_text()
 
-            # Title column stays the same, no need to update
-
-            # Description column stays the same, no need to update
-        except Exception:
-            pass
+        # Update the label
+        label = item.children[0]
+        if isinstance(label, Label):
+            label.update(text)
 
     def _update_footer(self) -> None:
         """Update the footer messages"""
