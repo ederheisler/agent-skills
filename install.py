@@ -115,7 +115,7 @@ class SkillItem(ListItem):
 
         # Create label text with full description
         status = "•" if is_installed else " "
-        label_text = f"[{status}] {skill.name}"
+        label_text = f"[ ] {status} {skill.name}"
         if skill.description:
             # Truncate description to fit reasonably in terminal
             desc = skill.description[:60]
@@ -319,7 +319,7 @@ class SkillListScreen(Screen):
         """Update the display of a skill item"""
         checkbox = "✓" if item.selected else " "
         status = "•" if item.is_installed else " "
-        text = f"[{checkbox}][{status}] {item.skill.name}"
+        text = f"[{checkbox}] {status} {item.skill.name}"
         if item.skill.description:
             desc = item.skill.description[:60]
             if len(item.skill.description) > 60:
