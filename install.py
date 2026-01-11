@@ -517,7 +517,12 @@ class SkillListScreen(Screen):
             pass
 
     def action_quit(self) -> None:
+        logger.info("Action: quit")
         self.app.exit()
+
+    def on_key(self, event) -> None:
+        """Log all key presses"""
+        logger.debug(f"Key pressed: {event.key}")
 
 
 class InstallerApp(App):
@@ -532,6 +537,7 @@ class InstallerApp(App):
     """
 
     def on_mount(self) -> None:
+        logger.info("=== InstallerApp mounted ===")
         self.push_screen(SkillListScreen())
 
 
