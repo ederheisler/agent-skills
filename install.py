@@ -314,20 +314,30 @@ class InstallScriptModal(Screen):
         self.app.pop_screen()
 
     def _install_script(self):
-        """Install OpenCode plugin symlink"""
+        """Install OpenCode plugin symlink using Python"""
         try:
-            import subprocess
+            # Create plugin directory
+            plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
+            plugin_dir.mkdir(parents=True, exist_ok=True)
 
-            # Run the installation commands
-            commands = [
-                "mkdir -p ~/.config/opencode/plugin",
-                "ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js",
-            ]
+            # Create symlink
+            source = (
+                Path.home()
+                / ".config"
+                / "opencode"
+                / "superpowers"
+                / ".opencode"
+                / "plugin"
+                / "superpowers.js"
+            )
+            target = plugin_dir / "superpowers.js"
 
-            for cmd in commands:
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-                if result.returncode != 0:
-                    raise Exception(f"Command failed: {cmd}\n{result.stderr}")
+            # Remove existing symlink/file if it exists
+            if target.exists() or target.is_symlink():
+                target.unlink()
+
+            # Create symlink
+            target.symlink_to(source)
 
             # Show success
             self.app.notify(
