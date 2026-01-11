@@ -177,23 +177,55 @@ class DescriptionModal(Screen):
         Binding("escape", "close_modal", "Close", show=True),
     ]
 
+    CSS = """
+    DescriptionModal {
+        align: center middle;
+    }
+
+    #modal-container {
+        width: 80;
+        height: auto;
+        background: $surface;
+        border: solid $primary;
+        padding: 2;
+    }
+
+    #title {
+        text-align: center;
+        margin-bottom: 1;
+        text-style: bold;
+        color: $text;
+    }
+
+    #description {
+        width: 100%;
+        height: auto;
+    }
+
+    #close_btn {
+        margin-top: 2;
+        align: center middle;
+    }
+    """
+
     def __init__(self, skill: SkillInfo):
         super().__init__()
         self.skill = skill
 
     def compose(self):
-        """Show skill title and full description"""
+        """Show skill title and full description in centered modal"""
         from textual.widgets import Static, Button
         from textual.containers import Vertical, Center
 
-        with Vertical():
-            yield Static(f"[bold blue]{self.skill.name}[/bold blue]", id="title")
-            yield Static("", id="separator")  # Spacer
-            yield Static(
-                self.skill.description or "No description available.", id="description"
-            )
-            with Center():
-                yield Button("Close (ESC)", id="close_btn")
+        with Center():
+            with Vertical(id="modal-container"):
+                yield Static(f"[bold]{self.skill.name}[/bold]", id="title")
+                yield Static(
+                    self.skill.description or "No description available.",
+                    id="description",
+                )
+                with Center():
+                    yield Button("Close (ESC)", id="close_btn")
 
     def on_button_pressed(self, event):
         """Handle button press"""

@@ -1,0 +1,14 @@
+2026-01-11 00:06:40,839 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-01-11 00:06:40,844 - __main__ - INFO - === InstallerApp mounted ===
+2026-01-11 00:06:40,844 - __main__ - INFO - === SkillListScreen initialized ===
+2026-01-11 00:06:40,848 - __main__ - INFO - Available skills: 27
+2026-01-11 00:06:40,848 - __main__ - INFO - Installed skills: {'canvas-design', 'quality-gates', 'brainstorming'}
+2026-01-11 00:06:40,848 - __main__ - INFO - Destination: /Users/eder/Code/.config/opencode/skill
+2026-01-11 00:06:42,488 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:06:42,488 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:06:42,489 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=True
+2026-01-11 00:06:43,793 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:06:43,793 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:06:43,793 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=False
+2026-01-11 00:06:44,834 - __main__ - DEBUG - Key pressed: r
+2026-01-11 00:06:46,652 - __main__ - DEBUG - Key pressed: e
