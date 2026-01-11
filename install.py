@@ -365,13 +365,13 @@ class SkillListScreen(Screen):
 
         # Show success message
         if to_install and to_remove:
-            msg = f"✓ Installed {len(to_install)}, Removed {len(to_remove)}"
+            msg = f"✓ SUCCESS: Installed {len(to_install)}, Removed {len(to_remove)}"
         elif to_install:
-            msg = f"✓ Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+            msg = f"✓ SUCCESS: Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
         else:
-            msg = f"✓ Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
+            msg = f"✓ SUCCESS: Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
-        footer_left.update(msg)
+        footer_left.update(f"[bold green]{msg}[/bold green]")
 
         # Also update header to show new count
         try:
