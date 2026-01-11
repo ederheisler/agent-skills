@@ -131,12 +131,17 @@ def list_skills() -> List[SkillInfo]:
     separator_skill = SkillInfo(name="", description="", path=Path(""), dir_name="")
     skills.append(separator_skill)
 
-    # Add regular skills
+    # Add regular skills (sorted by name)
+    regular_skills = []
     if SKILLS_DIR.exists():
         for skill_dir in sorted(SKILLS_DIR.iterdir()):
             if skill_dir.is_dir():
-                skills.append(get_skill_info(skill_dir))
+                regular_skills.append(get_skill_info(skill_dir))
 
+    # Sort regular skills by name
+    regular_skills.sort(key=lambda s: s.name)
+
+    skills.extend(regular_skills)
     return skills
 
 
