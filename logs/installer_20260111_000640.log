@@ -12,3 +12,5 @@
 2026-01-11 00:06:43,793 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=False
 2026-01-11 00:06:44,834 - __main__ - DEBUG - Key pressed: r
 2026-01-11 00:06:46,652 - __main__ - DEBUG - Key pressed: e
+2026-01-11 00:06:55,028 - __main__ - DEBUG - Key pressed: q
+2026-01-11 00:06:55,028 - __main__ - INFO - Action: quit

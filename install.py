@@ -171,11 +171,13 @@ class SkillItem(ListItem):
 
 
 class DescriptionModal(Screen):
-    """Modal to show full skill description"""
+    """Modal overlay to show full skill description"""
 
     BINDINGS = [
         Binding("escape", "close_modal", "Close", show=True),
     ]
+
+    MODAL = True  # Make this a modal screen
 
     CSS = """
     DescriptionModal {
@@ -553,13 +555,13 @@ class SkillListScreen(Screen):
             pass
 
     def action_show_description(self) -> None:
-        """Show description of currently selected skill in a modal"""
+        """Show description of currently selected skill in a modal overlay"""
         try:
             list_view = self.query_one(ListView)
             if list_view.index is not None:
                 item = list_view.children[list_view.index]
                 if isinstance(item, SkillItem):
-                    # Create and show description modal
+                    # Create and show modal overlay
                     modal = DescriptionModal(item.skill)
                     self.app.push_screen(modal)
         except Exception as e:
