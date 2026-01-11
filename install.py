@@ -196,7 +196,16 @@ class SkillListScreen(Screen):
         color: $text;
         border-top: heavy $accent;
         padding: 0 1;
+    }
+
+    #footer-left {
+        width: 1fr;
         content-align: left middle;
+    }
+
+    #footer-right {
+        width: auto;
+        content-align: right middle;
     }
     """
 
@@ -218,14 +227,30 @@ class SkillListScreen(Screen):
                 is_installed = skill.dir_name in self.installed
                 yield SkillItem(skill, is_installed)
 
-        # Footer
-        yield Static(self._get_footer(), id="footer")
+        # Footer with two columns
+        from textual.containers import Horizontal
+
+        with Container(id="footer"):
+            with Horizontal():
+                yield Static(self._get_footer_left(), id="footer-left")
+                yield Static(self._get_footer_right(), id="footer-right")
 
     def _get_title(self) -> str:
         return f"📦 Skills Manager"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
+
+    def _get_footer_left(self) -> str:
+        if not self.selected_skills:
+            return "Space: Toggle  Enter: Apply  Esc: Clear  Q: Quit"
+
+        install = len([s for s in self.selected_skills if s not in self.installed])
+        remove = len([s for s in self.selected_skills if s in self.installed])
+        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})"
+
+    def _get_footer_right(self) -> str:
+        return str(DESTINATION)
 
     def _get_footer(self) -> str:
         if not self.selected_skills:
@@ -353,10 +378,10 @@ class SkillListScreen(Screen):
             label.update(text)
 
     def _update_footer(self) -> None:
-        """Update the footer message"""
+        """Update the footer messages"""
         try:
-            footer = self.query_one("#footer", Static)
-            footer.update(self._get_footer())
+            footer_left = self.query_one("#footer-left", Static)
+            footer_left.update(self._get_footer_left())
         except Exception:
             pass
 
