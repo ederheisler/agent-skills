@@ -138,8 +138,8 @@ class SkillItem(ListItem):
         super().__init__(Label(text))
 
     def _format_skill_text(self) -> str:
-        """Format skill as tabbed columns: marker\t\ttitle\tdescription"""
-        # Column 1: Marker
+        """Format skill as: MARKER TITLE — DESCRIPTION"""
+        # Marker
         if self.selected:
             if self.is_installed:
                 marker = "[yellow]o[/yellow][red]✖[/red]"
@@ -151,17 +151,17 @@ class SkillItem(ListItem):
             else:
                 marker = " "
 
-        # Column 2: Title (padded to align)
-        title = self.skill.name
+        # Title with fixed spacing after marker
+        title = f"{marker} {self.skill.name}"
 
-        # Column 3: Description
-        desc = ""
+        # Description
         if self.skill.description:
-            desc = self.skill.description[:50]
-            if len(self.skill.description) > 50:
+            desc = self.skill.description[:60]
+            if len(self.skill.description) > 60:
                 desc += "…"
+            title += f" — {desc}"
 
-        return f"{marker}\t\t{title}\t\t{desc}"
+        return title
 
 
 class SkillListScreen(Screen):
