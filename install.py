@@ -479,9 +479,14 @@ class SkillListScreen(Screen):
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
-            logger.debug(f"Processing {skill_name}: is_installed={is_installed}")
+            logger.debug(
+                f"Processing {skill_name}: is_installed={is_installed}, type={type(skill_name)}"
+            )
 
             try:
+                logger.info(
+                    f"Skill check: '{skill_name}' == 'superpowers.js'? {skill_name == 'superpowers.js'}"
+                )
                 if skill_name == "superpowers.js":
                     # Handle plugin script specially
                     if is_installed:
@@ -522,6 +527,14 @@ class SkillListScreen(Screen):
                         target.symlink_to(source)
                         logger.info(f"✓ Installed plugin {skill_name}")
                         debug_log.append(f"Installed plugin {skill_name}")
+
+                        # Show success notification
+                        self.app.notify(
+                            f"Plugin {skill_name} installed successfully",
+                            title="✅ Success",
+                            severity="information",
+                            timeout=6.0,
+                        )
                 else:
                     # Handle regular skills
                     if is_installed:
@@ -592,7 +605,7 @@ class SkillListScreen(Screen):
             msg = f"Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
         logger.info(f"Success: {msg}")
-        self.notify(msg, title="✅ Success", severity="information", timeout=3.0)
+        self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
 
         # Also update header to show new count
         try:
