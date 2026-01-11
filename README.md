@@ -2,6 +2,22 @@
 
 A curated collection of AI agent skills with progressive disclosure enhancements and agent-agnostic language.
 
+## Quick Start
+
+### Install Skills
+
+Use the interactive TUI installer to manage skills:
+
+```bash
+# Using uv (recommended)
+uv run --with textual python3 install.py
+
+# Or if textual is installed
+python3 install.py
+```
+
+See [INSTALLER.md](INSTALLER.md) for detailed instructions and keyboard controls.
+
 ---
 
 ## Credits

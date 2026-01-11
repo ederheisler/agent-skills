@@ -1,0 +1,11 @@
+{
+  "MD060": false,
+  "MD051": false,
+  "MD001": false,
+  "MD013": {
+    "line_length": 2000
+  },
+  "MD040": {
+    "allowed_languages": ["text", "bash", "python", "json", "typescript", "markdown", "dot", "css", "html", "javascript", "shell", "sql", "yaml", "xml"]
+  }
+}
