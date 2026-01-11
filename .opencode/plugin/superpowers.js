@@ -81,7 +81,7 @@ ${toolMapping}
       use_skill: tool({
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
         args: {
-          skill_name: tool.schema.string().describe('Name of skill to load (e.g., "superpowers:brainstorming", "my-custom-skill", or "project:my-skill")')
+          skill_name: tool.schema.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming", "my-custom-skill", or "project:my-skill")')
         },
         execute: async (args, context) => {
           const { skill_name } = args;

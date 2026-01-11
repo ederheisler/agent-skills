@@ -608,10 +608,7 @@ class SkillListScreen(Screen):
                         plugin_dir.mkdir(parents=True, exist_ok=True)
 
                         source = (
-                            Path.home()
-                            / ".config"
-                            / "opencode"
-                            / "superpowers"
+                            Path(__file__).parent
                             / ".opencode"
                             / "plugin"
                             / "superpowers.js"
