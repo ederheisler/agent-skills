@@ -47,7 +47,7 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 
 ## Your Options
 
-### A) Delete all the timeout code. Start systematic debugging from Phase 1.
+### A) Delete all the timeout code. Start systematic debugging from Phase 1
 
 - Another 2-3 hours minimum
 - All 4 hours of work gets deleted

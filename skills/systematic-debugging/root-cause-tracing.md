@@ -35,7 +35,9 @@ digraph when_to_use {
 ### 1. Observe the Symptom
 
 ```
+
 Error: git init failed in /Users/jesse/project/packages/core
+
 ```text
 
 ### 2. Find Immediate Cause

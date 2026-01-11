@@ -102,6 +102,7 @@ def generate_report(data, format="markdown", include_charts=True):
     # Generate output in specified format
     # Optionally include visualizations
 ```
+
 ````
 
 **Low freedom** (specific scripts, few or no parameters):
@@ -153,7 +154,6 @@ What works perfectly for Opus might need more detail for Haiku. If you plan to u
 
   For complete Skill structure details, see the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview#skill-structure).
 
-
 ### Naming conventions
 
 Use consistent naming patterns to make Skills easier to reference and discuss. We recommend using **gerund form** (verb + -ing) for Skill names, as this clearly describes the activity or capability the Skill provides.
@@ -194,7 +194,6 @@ The `description` field enables Skill discovery and should include both what the
 * **Good:** "Processes Excel files and generates reports"
 * **Avoid:** "I can help you process Excel files"
 * **Avoid:** "You can use this to process Excel files"
-
 
 **Be specific and include key terms**. Include both what the Skill does and specific triggers/contexts for when to use it.
 
@@ -257,6 +256,7 @@ As your Skill grows, you can bundle additional content that Claude loads only wh
 The complete Skill directory structure might look like this:
 
 ```
+
 pdf/
 ├── SKILL.md              # Main instructions (loaded when triggered)
 ├── FORMS.md              # Form-filling guide (loaded as needed)
@@ -266,6 +266,7 @@ pdf/
     ├── analyze_form.py   # Utility script (executed, not loaded)
     ├── fill_form.py      # Form filling script
     └── validate.py       # Validation script
+
 ```text
 
 #### Pattern 1: High-level guide with references
@@ -292,6 +293,7 @@ with pdfplumber.open("file.pdf") as pdf:
 **Form filling**: See [FORMS.md](FORMS.md) for complete guide
 **API reference**: See [REFERENCE.md](REFERENCE.md) for all methods
 **Examples**: See [EXAMPLES.md](EXAMPLES.md) for common patterns
+
 ````
 
 Claude loads FORMS.md, REFERENCE.md, or EXAMPLES.md only when needed.
@@ -423,12 +425,15 @@ Break complex operations into clear, sequential steps. For particularly complex 
 Copy this checklist and track your progress:
 
 ```
+
 Research Progress:
-- [ ] Step 1: Read all source documents
-- [ ] Step 2: Identify key themes
-- [ ] Step 3: Cross-reference claims
-- [ ] Step 4: Create structured summary
-- [ ] Step 5: Verify citations
+
+* [ ] Step 1: Read all source documents
+* [ ] Step 2: Identify key themes
+* [ ] Step 3: Cross-reference claims
+* [ ] Step 4: Create structured summary
+* [ ] Step 5: Verify citations
+
 ```text
 
 **Step 1: Read all source documents**
@@ -625,6 +630,7 @@ ALWAYS use this exact template structure:
 1. Specific actionable recommendation
 2. Specific actionable recommendation
 ```
+
 ````
 
 **For flexible guidance** (when adaptation is useful):
@@ -718,7 +724,6 @@ Guide Claude through decision points:
 
 **Tip:**
   If workflows become large or complicated with many steps, consider pushing them into separate files and tell Claude to read the appropriate file based on the task at hand.
-
 
 ## Evaluation and iteration
 
@@ -848,6 +853,7 @@ import pdfplumber
 ```
 
 For scanned PDFs requiring OCR, use pdf2image with pytesseract instead."
+
 ````
 
 ## Advanced: Skills with executable code
@@ -980,7 +986,6 @@ When inputs can be rendered as images, have Claude analyze them:
 
 **Note:**
   In this example, you'd need to write the `pdf_to_images.py` script.
-
 
 Claude's vision capabilities help understand layouts and structures.
 
@@ -1139,6 +1144,6 @@ Before sharing a Skill, verify:
 
 **Next Steps:**
 
-- **Get started with Agent Skills** - Create your first Skill ([Quickstart](/en/docs/agents-and-tools/agent-skills/quickstart))
-- **Use Skills in Claude Code** - Create and manage Skills in Claude Code ([Guide](/en/docs/claude-code/skills))
-- **Use Skills with the API** - Upload and use Skills programmatically ([API Guide](/en/api/skills-guide))
+* **Get started with Agent Skills** - Create your first Skill ([Quickstart](/en/docs/agents-and-tools/agent-skills/quickstart))
+* **Use Skills in Claude Code** - Create and manage Skills in Claude Code ([Guide](/en/docs/claude-code/skills))
+* **Use Skills with the API** - Upload and use Skills programmatically ([API Guide](/en/api/skills-guide))

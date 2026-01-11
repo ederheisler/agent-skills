@@ -84,21 +84,27 @@ The installer extracts `name` and `description` from the frontmatter to display 
 ## Destination Paths
 
 ### Global Skills (~/.config/opencode/skill/)
+
 Installed globally for all OpenCode projects. Requires creating the directory structure.
 
 ### OpenCode Skills (.opencode/skill/)
+
 Project-specific skills for OpenCode installations.
 
 ### Claude Skills (.claude/skills/)
+
 Project-specific skills for Claude Code installations.
 
 ## Troubleshooting
 
 ### "No skills found in repository"
+
 Make sure you're running the installer from the repository root with a `skills/` directory containing skill folders.
 
 ### Textual not found
+
 Install textual:
+
 ```bash
 uv pip install textual
 # OR
@@ -106,17 +112,21 @@ python3 -m pip install textual
 ```
 
 ### Terminal display issues
+
 Ensure your terminal supports 256 colors:
+
 ```bash
 echo $TERM  # Should output something like xterm-256color or similar
 ```
 
 ### Slow keyboard response
+
 This is normal in some terminal emulators. Try a different terminal or SSH client if available.
 
 ## Implementation Details
 
 The installer is built with:
+
 - **Textual Framework** - Modern TUI framework for Python
 - **SelectionList** - For keyboard-navigable skill selection
 - **Screen system** - Separate destination and skill selection screens

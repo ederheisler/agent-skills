@@ -415,7 +415,7 @@ After creating your evaluation file, you can use the provided evaluation harness
    pip install anthropic mcp
    ```
 
-2. **Set API Key**
+1. **Set API Key**
 
    ```bash
    export ANTHROPIC_API_KEY=your_api_key_here

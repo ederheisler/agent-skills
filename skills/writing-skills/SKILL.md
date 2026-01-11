@@ -373,8 +373,10 @@ You're good at porting - one great example is enough.
 ### Self-Contained Skill
 
 ```
+
 defense-in-depth/
   SKILL.md    # Everything inline
+
 ```text
 
 When: All content fits, no heavy reference needed
@@ -382,9 +384,11 @@ When: All content fits, no heavy reference needed
 ### Skill with Reusable Tool
 
 ```
+
 condition-based-waiting/
   SKILL.md    # Overview + patterns
   example.ts  # Working helpers to adapt
+
 ```text
 
 When: Tool is reusable code, not just narrative
@@ -392,11 +396,13 @@ When: Tool is reusable code, not just narrative
 ### Skill with Heavy Reference
 
 ```
+
 pptx/
   SKILL.md       # Overview + workflows
   pptxgenjs.md   # 600 lines API reference
   ooxml.md       # 500 lines XML structure
   scripts/       # Executable tools
+
 ```text
 
 When: Reference material too large for inline
@@ -404,7 +410,9 @@ When: Reference material too large for inline
 ## The Iron Law (Same as TDD)
 
 ```
+
 NO SKILL WITHOUT A FAILING TEST FIRST
+
 ```text
 
 This applies to NEW skills AND EDITS to existing skills.
@@ -506,8 +514,8 @@ Don't just state the rule - forbid specific workarounds:
 Write code before test? Delete it.
 ```
 
-
 **Good example:**
+
 ```markdown
 Write code before test? Delete it. Start over.
 

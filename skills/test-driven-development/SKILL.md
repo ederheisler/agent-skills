@@ -92,10 +92,11 @@ test('retries failed operations 3 times', async () => {
 });
 
 ```
+
 Clear name, tests real behavior, one thing
 
-
 **Bad example:**
+
 ```typescript
 test('retry works', async () => {
   const mock = jest.fn()
@@ -139,6 +140,7 @@ Confirm:
 Write simplest code to pass the test.
 
 **Good example:**
+
 ```typescript
 async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   for (let i = 0; i < 3; i++) {
@@ -167,8 +169,8 @@ async function retryOperation<T>(
   // YAGNI
 }
 ```
-Over-engineered
 
+Over-engineered
 
 Don't add features, refactor other code, or "improve" beyond the test.
 

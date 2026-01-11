@@ -195,8 +195,8 @@ For each new rationalization, add:
 Write code before test? Delete it.
 ```
 
-
 **After:**
+
 ```markdown
 Write code before test? Delete it. Start over.
 

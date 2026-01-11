@@ -137,9 +137,11 @@ go test ./...
 ### 5. Report Location
 
 ```
+
 Worktree ready at `full-path`
 Tests passing (`N` tests, 0 failures)
 Ready to implement `feature-name`
+
 ```text
 
 ## Quick Reference

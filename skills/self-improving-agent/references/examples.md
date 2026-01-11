@@ -148,19 +148,23 @@ error: failed to solve: python:3.11-slim: no match for platform linux/arm64
 ```
 
 ### Context
+
 - Command: `docker build -t myapp .`
 - Dockerfile uses `FROM python:3.11-slim`
 - Running on Apple Silicon (M1/M2)
 
 ### Suggested Fix
+
 Add platform flag: `docker build --platform linux/amd64 -t myapp .`
 Or update Dockerfile: `FROM --platform=linux/amd64 python:3.11-slim`
 
 ### Metadata
+
 - Reproducible: yes
 - Related Files: Dockerfile
 
 ---
+
 ```text
 
 ## Error Entry: Recurring Issue
