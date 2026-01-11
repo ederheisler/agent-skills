@@ -174,7 +174,7 @@ class DescriptionModal(Screen):
     """Modal overlay to show full skill description"""
 
     BINDINGS = [
-        Binding("space", "close_modal", "Close", show=True),
+        Binding("e", "close_modal", "Close", show=True),
     ]
 
     MODAL = True  # Make this a modal screen
@@ -228,7 +228,7 @@ class DescriptionModal(Screen):
                     id="description",
                 )
                 with Center():
-                    yield Button("Close (SPACE)", id="close_btn")
+                    yield Button("Close (E)", id="close_btn")
 
     def on_button_pressed(self, event):
         """Handle button press"""
