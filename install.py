@@ -12,18 +12,18 @@ Keyboard controls:
 - Q: Quit
 """
 
-import shutil
-from pathlib import Path
-from typing import Set, List
-from dataclasses import dataclass
 import logging
+import shutil
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import List, Set
 
-from textual.app import ComposeResult, App
-from textual.containers import Container, Vertical, Horizontal
-from textual.screen import Screen
-from textual.widgets import Static, ListView, ListItem, Label
+from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.containers import Container
+from textual.screen import Screen
+from textual.widgets import Label, ListItem, ListView, Static
 
 # Setup logging
 LOG_DIR = Path(__file__).parent / "logs"
@@ -265,8 +265,8 @@ class DescriptionModal(Screen):
 
     def compose(self):
         """Show skill title and full description in centered modal"""
-        from textual.widgets import Static, Button
-        from textual.containers import Vertical, Center
+        from textual.containers import Center, Vertical
+        from textual.widgets import Button, Static
 
         with Center():
             with Vertical(id="modal-container"):
@@ -332,8 +332,8 @@ class LogModal(Screen):
 
     def compose(self):
         """Show recent log entries"""
-        from textual.widgets import Static, Button
-        from textual.containers import Vertical, Center
+        from textual.containers import Center, Vertical
+        from textual.widgets import Button, Static
 
         # Get recent log content
         log_content = self._get_recent_logs()
@@ -501,7 +501,7 @@ class SkillListScreen(Screen):
             install = len([s for s in self.selected_skills if s not in self.installed])
             remove = len([s for s in self.selected_skills if s in self.installed])
             return f"📦 Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})"
-        return f"📦 Skills Manager"
+        return "📦 Skills Manager"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
@@ -559,10 +559,9 @@ class SkillListScreen(Screen):
             return
 
         try:
-            footer_left = self.query_one("#footer-left", Static)
             list_view = self.query_one(ListView)
-            debug_log.append("Got footer_left and list_view")
-            logger.debug("Got footer_left and list_view")
+            debug_log.append("Got list_view")
+            logger.debug("Got list_view")
         except Exception as e:
             logger.error(f"Exception getting widgets: {e}", exc_info=True)
             return
@@ -606,25 +605,62 @@ class SkillListScreen(Screen):
                             logger.warning(
                                 f"Plugin symlink not found for removal: {plugin_target}"
                             )
-                        debug_log.append(f"Removed plugin {skill_name}")
+
+                        # Also remove copied plugin + lib from user's superpowers dir
+                        user_superpowers = (
+                            Path.home() / ".config" / "opencode" / "superpowers"
+                        )
+                        user_plugin_path = (
+                            user_superpowers / ".opencode" / "plugin" / "superpowers.js"
+                        )
+                        user_lib_path = user_superpowers / "lib" / "skills-core.js"
+                        try:
+                            if user_plugin_path.exists():
+                                user_plugin_path.unlink()
+                                logger.info(
+                                    f"✓ Removed copied plugin: {user_plugin_path}"
+                                )
+                            else:
+                                logger.debug(
+                                    f"Copied plugin not found: {user_plugin_path}"
+                                )
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to remove copied plugin: {e}")
+                        try:
+                            if user_lib_path.exists():
+                                user_lib_path.unlink()
+                                logger.info(f"✓ Removed copied lib: {user_lib_path}")
+                            else:
+                                logger.debug(f"Copied lib not found: {user_lib_path}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to remove copied lib: {e}")
+
+                        debug_log.append(f"Removed plugin {skill_name} and user copies")
                     else:
                         plugins_to_install.append(skill_name)
-                        # Install plugin symlink
+                        # Install plugin by copying to user's superpowers dir and symlinking
                         logger.info(f"Installing plugin {skill_name}")
                         plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
                         plugin_dir.mkdir(parents=True, exist_ok=True)
 
-                        source = (
-                            Path(__file__).parent
-                            / ".opencode"
-                            / "plugin"
-                            / "superpowers.js"
+                        repo_root = Path(__file__).parent
+                        local_plugin = (
+                            repo_root / ".opencode" / "plugin" / "superpowers.js"
                         )
-                        target = plugin_dir / "superpowers.js"
+                        local_lib = repo_root / "lib" / "skills-core.js"
 
-                        # Check if source exists
-                        if not source.exists():
-                            error_msg = f"Source file not found: {source}. Please ensure superpowers plugin is available."
+                        # Prepare user superpowers directory structure per INSTALL.md
+                        user_superpowers = (
+                            Path.home() / ".config" / "opencode" / "superpowers"
+                        )
+                        user_plugin_dir = user_superpowers / ".opencode" / "plugin"
+                        user_lib_dir = user_superpowers / "lib"
+                        user_plugin_dir.mkdir(parents=True, exist_ok=True)
+                        user_lib_dir.mkdir(parents=True, exist_ok=True)
+
+                        # Copy plugin file to user's superpowers directory
+                        if not local_plugin.exists():
+                            error_msg = f"Source plugin not found: {local_plugin}. Please ensure superpowers plugin is available."
                             logger.error(f"✗ {error_msg}")
                             self.app.notify(
                                 error_msg,
@@ -633,17 +669,72 @@ class SkillListScreen(Screen):
                                 timeout=4.0,
                             )
                             continue
+                        user_plugin_path = user_plugin_dir / "superpowers.js"
+                        try:
+                            shutil.copy2(local_plugin, user_plugin_path)
+                            logger.info(f"✓ Copied plugin to {user_plugin_path}")
+                            # Verify plugin copy
+                            if user_plugin_path.exists():
+                                logger.info("✓ Verified copied plugin exists")
+                            else:
+                                logger.error("✗ Copied plugin missing after copy")
+                        except Exception as e:
+                            logger.error(f"✗ Failed to copy plugin: {e}")
+                            self.app.notify(
+                                f"Failed to copy plugin: {e}",
+                                title="❌ Error",
+                                severity="error",
+                                timeout=4.0,
+                            )
+                            continue
 
-                        # Remove existing if any
+                        # Copy lib/skills-core.js to user's superpowers directory
+                        if local_lib.exists():
+                            try:
+                                user_lib_path = user_lib_dir / "skills-core.js"
+                                shutil.copy2(local_lib, user_lib_path)
+                                logger.info(f"✓ Copied lib to {user_lib_path}")
+                                # Verify lib copy
+                                if user_lib_path.exists():
+                                    logger.info("✓ Verified copied lib exists")
+                                else:
+                                    logger.warning("⚠️ Copied lib missing after copy")
+                            except Exception as e:
+                                logger.error(
+                                    f"✗ Failed to copy lib/skills-core.js: {e}"
+                                )
+                                # Non-fatal: continue but warn user
+                                self.app.notify(
+                                    f"lib/skills-core.js copy failed: {e}",
+                                    title="⚠️ Warning",
+                                    severity="warning",
+                                    timeout=4.0,
+                                )
+                        else:
+                            logger.warning(
+                                f"lib/skills-core.js not found at {local_lib}"
+                            )
+
+                        # Create symlink in plugin directory pointing to user's copied plugin
+                        target = plugin_dir / "superpowers.js"
                         if target.exists() or target.is_symlink():
                             target.unlink()
-
-                        # Create symlink
-                        target.symlink_to(source)
-                        logger.info(
-                            f"✓ Installed plugin {skill_name} -> {target} -> {source}"
-                        )
-                        debug_log.append(f"Installed plugin {skill_name}")
+                        source = user_plugin_path
+                        try:
+                            target.symlink_to(source)
+                            logger.info(
+                                f"✓ Installed plugin {skill_name} -> {target} -> {source}"
+                            )
+                            debug_log.append(f"Installed plugin {skill_name}")
+                        except Exception as e:
+                            logger.error(f"✗ Failed to create plugin symlink: {e}")
+                            self.app.notify(
+                                f"Failed to create plugin symlink: {e}",
+                                title="❌ Error",
+                                severity="error",
+                                timeout=4.0,
+                            )
+                            continue
 
                         # Verify installation
                         if (
@@ -652,14 +743,12 @@ class SkillListScreen(Screen):
                             and target.readlink() == source
                         ):
                             logger.info(
-                                f"✓ Verification: symlink exists and points to correct target"
+                                "✓ Verification: symlink exists and points to copied plugin"
                             )
-                            success_msg = f"Plugin installed to {target}"
                         else:
                             logger.error(
-                                f"✗ Verification failed: symlink not created properly"
+                                "✗ Verification failed: symlink not created properly"
                             )
-                            success_msg = f"Plugin installed but verification failed"
 
                         # Don't show individual plugin notifications - show summary at end
                 else:
