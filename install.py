@@ -212,13 +212,11 @@ class SkillListScreen(Screen):
             yield Label(self._get_title(), id="header-title")
             yield Label(self._get_header_info(), id="header-info")
 
-        # Skill list
-        list_view = ListView()
-        for skill in self.available_skills:
-            is_installed = skill.dir_name in self.installed
-            item = SkillItem(skill, is_installed)
-            list_view.append(item)
-        yield list_view
+        # Skill list - yield items directly
+        with ListView():
+            for skill in self.available_skills:
+                is_installed = skill.dir_name in self.installed
+                yield SkillItem(skill, is_installed)
 
         # Footer
         yield Static(self._get_footer(), id="footer")
@@ -245,22 +243,27 @@ class SkillListScreen(Screen):
 
     def action_toggle_skill(self) -> None:
         """Toggle the selected skill"""
-        list_view = self.query_one(ListView)
-        if list_view.index is not None:
-            item = list_view.children[list_view.index]
-            if isinstance(item, SkillItem):
-                item.selected = not item.selected
-                skill_name = item.skill.dir_name
+        try:
+            list_view = self.query_one(ListView)
+            if list_view.index is not None and list_view.index < len(
+                list_view.children
+            ):
+                item = list_view.children[list_view.index]
+                if isinstance(item, SkillItem):
+                    item.selected = not item.selected
+                    skill_name = item.skill.dir_name
 
-                # Update selection set
-                if item.selected:
-                    self.selected_skills.add(skill_name)
-                else:
-                    self.selected_skills.discard(skill_name)
+                    # Update selection set
+                    if item.selected:
+                        self.selected_skills.add(skill_name)
+                    else:
+                        self.selected_skills.discard(skill_name)
 
-                # Update item display
-                self._update_item_display(item)
-                self._update_footer()
+                    # Update item display
+                    self._update_item_display(item)
+                    self._update_footer()
+        except Exception:
+            pass
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
@@ -280,21 +283,28 @@ class SkillListScreen(Screen):
 
     def action_clear_selections(self) -> None:
         """Clear all selections"""
-        list_view = self.query_one(ListView)
-        for item in list_view.children:
-            if isinstance(item, SkillItem):
-                item.selected = False
-                self._update_item_display(item)
+        try:
+            list_view = self.query_one(ListView)
+            for item in list_view.children:
+                if isinstance(item, SkillItem):
+                    item.selected = False
+                    self._update_item_display(item)
 
-        self.selected_skills.clear()
-        self._update_footer()
+            self.selected_skills.clear()
+            self._update_footer()
+        except Exception:
+            pass
 
     def action_execute_install(self) -> None:
         """Execute the installation/removal of selected skills"""
         if not self.selected_skills:
             return
 
-        footer = self.query_one("#footer", Static)
+        try:
+            footer = self.query_one("#footer", Static)
+            list_view = self.query_one(ListView)
+        except Exception:
+            return
 
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
@@ -325,7 +335,6 @@ class SkillListScreen(Screen):
         self.installed = get_installed_skills(self.destination)
 
         # Clear selections and refresh display
-        list_view = self.query_one(ListView)
         for item in list_view.children:
             if isinstance(item, SkillItem):
                 item.selected = False
@@ -337,8 +346,11 @@ class SkillListScreen(Screen):
 
     def _update_footer(self) -> None:
         """Update the footer message"""
-        footer = self.query_one("#footer", Static)
-        footer.update(self._get_footer())
+        try:
+            footer = self.query_one("#footer", Static)
+            footer.update(self._get_footer())
+        except Exception:
+            pass
 
     def action_quit(self) -> None:
         self.app.exit()
