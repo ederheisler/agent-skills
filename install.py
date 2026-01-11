@@ -26,7 +26,7 @@ from textual.widgets import Static, ListView, ListItem, Label
 from textual.binding import Binding
 
 # Setup logging
-LOG_DIR = Path.home() / ".config" / "opencode" / "logs"
+LOG_DIR = Path(__file__).parent / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / f"installer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
