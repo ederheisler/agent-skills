@@ -329,6 +329,8 @@ class SkillListScreen(Screen):
                         continue
                     if dest_path.exists():
                         shutil.rmtree(dest_path)
+                    # Ensure destination directory exists
+                    DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
             except Exception as e:
                 footer.update(f"❌ Error: {e}")
