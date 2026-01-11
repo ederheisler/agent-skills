@@ -191,12 +191,12 @@ class SkillListScreen(Screen):
     }
 
     #footer {
-        height: auto;
+        height: 2;
         background: $secondary;
         color: $text;
         border-top: heavy $accent;
-        padding: 1;
-        content-align: left top;
+        padding: 0 1;
+        content-align: left middle;
     }
     """
 
@@ -229,11 +229,11 @@ class SkillListScreen(Screen):
 
     def _get_footer(self) -> str:
         if not self.selected_skills:
-            return f"Destination: {DESTINATION}\n[Space] Toggle  [Enter] Apply  [Esc] Clear  [Q] Quit"
+            return f"Destination: {DESTINATION}\nSpace: Toggle  Enter: Apply  Esc: Clear  Q: Quit"
 
         install = len([s for s in self.selected_skills if s not in self.installed])
         remove = len([s for s in self.selected_skills if s in self.installed])
-        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})\nDestination: {DESTINATION}\n[Enter] Apply changes  [Esc] Clear selection  [Q] Quit"
+        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})  |  Enter: Apply  Esc: Clear  Q: Quit"
 
     def action_toggle_skill(self) -> None:
         """Toggle the selected skill"""
