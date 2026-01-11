@@ -424,21 +424,21 @@ class SkillListScreen(Screen):
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
-        # Build the marker with colors (2 chars wide for consistent alignment)
+        # Build the marker with colors (fixed width to prevent shifting)
         if item.selected:
             if item.is_installed:
-                # Yellow o + Red ✖ to show it will be removed
-                marker = "[yellow]o[/yellow][red]✖[/red]"
+                # Will be removed: red X
+                marker = "[red]✖[/red]"
             else:
-                # White/gray ✓ to show it will be installed
-                marker = "[white]✓ [/white]"
+                # Will be installed: green check
+                marker = "[green]✓[/green]"
         else:
             if item.is_installed:
-                # Yellow o for installed
-                marker = "[yellow]o [/yellow]"
+                # Installed: yellow circle
+                marker = "[yellow]●[/yellow]"
             else:
-                # Spaces for not installed
-                marker = "  "
+                # Not installed: space
+                marker = " "
 
         text = f"{marker} {item.skill.name}"
         if item.skill.description:
