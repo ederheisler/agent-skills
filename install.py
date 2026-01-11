@@ -117,8 +117,8 @@ class SkillItem(ListItem):
         self.selected = False
 
         # Create label text with full description
-        # Use • inside brackets for installed, space for not installed
-        status = "•" if is_installed else " "
+        # Use ✓ inside brackets for installed, space for not installed
+        status = "✓" if is_installed else " "
         label_text = f"[{status}] {skill.name}"
         if skill.description:
             # Truncate description to fit reasonably in terminal
@@ -321,13 +321,12 @@ class SkillListScreen(Screen):
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
-        # Show ✓ if selected, • if installed, space otherwise
+        # When selected: add X to show it's marked for action
+        # Keep the original status (✓ for installed, space for not)
         if item.selected:
-            marker = "✓"
-        elif item.is_installed:
-            marker = "•"
+            marker = f"✓X" if item.is_installed else "X"
         else:
-            marker = " "
+            marker = "✓" if item.is_installed else " "
 
         text = f"[{marker}] {item.skill.name}"
         if item.skill.description:
