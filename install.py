@@ -150,12 +150,16 @@ def get_installed_skills(destination: Path) -> Set[str]:
 
     # Check plugin script
     plugin_target = Path.home() / ".config" / "opencode" / "plugin" / "superpowers.js"
-    logger.debug(
+    logger.info(
         f"Checking plugin: {plugin_target}, exists={plugin_target.exists()}, is_symlink={plugin_target.is_symlink()}"
     )
     if plugin_target.exists() and plugin_target.is_symlink():
         installed.add("superpowers.js")
-        logger.debug("Plugin superpowers.js detected as installed")
+        logger.info("Plugin superpowers.js detected as installed")
+    else:
+        logger.info(
+            f"Plugin superpowers.js NOT detected: exists={plugin_target.exists()}, symlink={plugin_target.is_symlink()}"
+        )
 
     return installed
 
@@ -279,6 +283,91 @@ class DescriptionModal(Screen):
         self.app.pop_screen()
 
 
+class LogModal(Screen):
+    """Modal to show recent log entries"""
+
+    MODAL = True
+
+    BINDINGS = [
+        Binding("escape", "close_modal", "Close", show=True),
+    ]
+
+    CSS = """
+    LogModal {
+        align: center middle;
+        background: rgba(0,0,0,0.7);
+    }
+
+    #modal-container {
+        width: 90;
+        height: 80;
+        background: $surface;
+        border: solid $primary;
+        padding: 2;
+    }
+
+    #title {
+        text-align: center;
+        margin-bottom: 1;
+        text-style: bold;
+        color: $text;
+    }
+
+    #log-content {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+    }
+
+    #close_btn {
+        margin-top: 2;
+        align: center middle;
+    }
+    """
+
+    def compose(self):
+        """Show recent log entries"""
+        from textual.widgets import Static, Button
+        from textual.containers import Vertical, Center
+
+        # Get recent log content
+        log_content = self._get_recent_logs()
+
+        with Vertical(id="modal-container"):
+            yield Static("Recent Log Entries", id="title")
+            yield Static(log_content, id="log-content")
+            with Center():
+                yield Button("Close (ESC)", id="close_btn")
+
+    def _get_recent_logs(self) -> str:
+        """Get the 20 most recent log lines"""
+        try:
+            log_files = list(LOG_DIR.glob("installer_*.log"))
+            if not log_files:
+                return "No log files found."
+
+            # Get the most recent log file
+            latest_log = max(log_files, key=lambda f: f.stat().st_mtime)
+
+            # Read the last 20 lines
+            with open(latest_log, "r") as f:
+                lines = f.readlines()
+                recent_lines = lines[-20:] if len(lines) > 20 else lines
+
+            return "".join(recent_lines)
+        except Exception as e:
+            return f"Error reading logs: {e}"
+
+    def on_button_pressed(self, event):
+        """Handle button press"""
+        if event.button.id == "close_btn":
+            self.app.pop_screen()
+
+    def action_close_modal(self):
+        """Close the modal"""
+        self.app.pop_screen()
+
+
 class SkillListScreen(Screen):
     """Main screen for selecting and installing skills"""
 
@@ -286,6 +375,7 @@ class SkillListScreen(Screen):
         Binding("space", "toggle_skill", "Toggle", show=True),
         Binding("enter", "execute_install", "Apply", show=True),
         Binding("e", "show_description", "Description", show=True),
+        Binding("l", "show_logs", "Show Logs", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
 
@@ -412,7 +502,7 @@ class SkillListScreen(Screen):
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer_left(self) -> str:
-        return "Space: Toggle  Enter: Apply  E: Description  Q: Quit"
+        return "Space: Toggle  Enter: Apply  E: Description  L: Logs  Q: Quit"
 
     def _get_footer_right(self) -> str:
         return str(DESTINATION)
@@ -505,6 +595,11 @@ class SkillListScreen(Screen):
                         )
                         if plugin_target.exists():
                             plugin_target.unlink()
+                            logger.info(f"✓ Removed plugin symlink: {plugin_target}")
+                        else:
+                            logger.warning(
+                                f"Plugin symlink not found for removal: {plugin_target}"
+                            )
                         debug_log.append(f"Removed plugin {skill_name}")
                     else:
                         # Install plugin symlink
@@ -529,12 +624,24 @@ class SkillListScreen(Screen):
 
                         # Create symlink
                         target.symlink_to(source)
-                        logger.info(f"✓ Installed plugin {skill_name}")
+                        logger.info(
+                            f"✓ Installed plugin {skill_name} -> {target} -> {source}"
+                        )
                         debug_log.append(f"Installed plugin {skill_name}")
 
-                        # Show success notification
+                        # Verify installation
+                        if target.exists() and target.is_symlink():
+                            logger.info(f"✓ Verification: symlink exists and is valid")
+                            success_msg = f"Plugin installed: {target} -> {source}"
+                        else:
+                            logger.error(
+                                f"✗ Verification failed: symlink not created properly"
+                            )
+                            success_msg = f"Plugin installed but verification failed"
+
+                        # Show success notification with details
                         self.app.notify(
-                            f"Plugin {skill_name} installed successfully",
+                            success_msg,
                             title="✅ Success",
                             severity="information",
                             timeout=6.0,
@@ -661,6 +768,14 @@ class SkillListScreen(Screen):
                     self.app.push_screen(modal)
         except Exception as e:
             logger.error(f"Error showing description: {e}")
+
+    def action_show_logs(self) -> None:
+        """Show recent log entries in a modal"""
+        try:
+            modal = LogModal()
+            self.app.push_screen(modal)
+        except Exception as e:
+            logger.error(f"Error showing logs: {e}")
 
     def action_quit(self) -> None:
         logger.info("Action: quit")
