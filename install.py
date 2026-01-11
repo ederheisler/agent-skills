@@ -597,13 +597,6 @@ class SkillListScreen(Screen):
                         if plugin_target.exists():
                             plugin_target.unlink()
                             logger.info(f"✓ Removed plugin symlink: {plugin_target}")
-                            # Show individual plugin removal notification
-                            self.app.notify(
-                                f"Plugin removed from {plugin_target}",
-                                title="✅ Plugin Removed",
-                                severity="information",
-                                timeout=4.0,
-                            )
                         else:
                             logger.warning(
                                 f"Plugin symlink not found for removal: {plugin_target}"
@@ -663,13 +656,7 @@ class SkillListScreen(Screen):
                             )
                             success_msg = f"Plugin installed but verification failed"
 
-                        # Show individual plugin success notification
-                        self.app.notify(
-                            success_msg,
-                            title="✅ Plugin Success",
-                            severity="information",
-                            timeout=6.0,
-                        )
+                        # Don't show individual plugin notifications - show summary at end
                 else:
                     # Handle regular skills
                     if is_installed:
@@ -731,10 +718,28 @@ class SkillListScreen(Screen):
         self.selected_skills.clear()
         self._update_header()
 
-        # Show success notification for skills only (plugins show their own notifications)
-        if skills_to_remove:
-            msg = f"Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
-            logger.info(f"Success: {msg}")
+        # Show success notifications for plugins
+        if plugins_to_install or plugins_to_remove:
+            if plugins_to_install and plugins_to_remove:
+                msg = f"Installed {len(plugins_to_install)}, Removed {len(plugins_to_remove)} plugin{'s' if len(plugins_to_install) + len(plugins_to_remove) > 1 else ''}"
+            elif plugins_to_install:
+                msg = f"Installed {len(plugins_to_install)} plugin{'s' if len(plugins_to_install) > 1 else ''}"
+            else:
+                msg = f"Removed {len(plugins_to_remove)} plugin{'s' if len(plugins_to_remove) > 1 else ''}"
+
+            logger.info(f"Plugin Success: {msg}")
+            self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
+
+        # Show success notifications for skills
+        if skills_to_install or skills_to_remove:
+            if skills_to_install and skills_to_remove:
+                msg = f"Installed {len(skills_to_install)}, Removed {len(skills_to_remove)} skill{'s' if len(skills_to_install) + len(skills_to_remove) > 1 else ''}"
+            elif skills_to_install:
+                msg = f"Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
+            else:
+                msg = f"Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
+
+            logger.info(f"Skills Success: {msg}")
             self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
         elif skills_to_install:
             if skills_to_install and skills_to_remove:
