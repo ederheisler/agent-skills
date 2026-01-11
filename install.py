@@ -352,8 +352,8 @@ class SkillListScreen(Screen):
         # Build the marker with colors
         if item.selected:
             if item.is_installed:
-                # Yellow o + Red × to show it will be removed
-                marker = "[yellow]o[/yellow][red]×[/red]"
+                # Yellow o + Red ✕ to show it will be removed
+                marker = "[yellow]o[/yellow][red]✕[/red]"
             else:
                 # White/gray ✓ to show it will be installed
                 marker = "[white]✓[/white]"
