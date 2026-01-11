@@ -16,6 +16,7 @@ import shutil
 from pathlib import Path
 from typing import Set, List
 from dataclasses import dataclass
+import asyncio
 
 from textual.app import ComposeResult, App
 from textual.containers import Container, Vertical
@@ -309,6 +310,11 @@ class SkillListScreen(Screen):
         except Exception:
             return
 
+        # Count what we're doing
+        to_install = [s for s in self.selected_skills if s not in self.installed]
+        to_remove = [s for s in self.selected_skills if s in self.installed]
+
+        # Execute operations
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
@@ -333,7 +339,7 @@ class SkillListScreen(Screen):
                     DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
             except Exception as e:
-                footer.update(f"❌ Error: {e}")
+                footer.update(f"❌ Error installing {skill_name}: {e}")
                 return
 
         # Update state
@@ -347,7 +353,19 @@ class SkillListScreen(Screen):
                 self._update_item_display(item)
 
         self.selected_skills.clear()
-        footer.update("✓ Done!")
+
+        # Show success message with details
+        msg = "✓ Done!"
+        if to_install:
+            msg += f" Installed: {len(to_install)}"
+        if to_remove:
+            if to_install:
+                msg += " |"
+            msg += f" Removed: {len(to_remove)}"
+        footer.update(msg)
+
+        # Clear message after 3 seconds
+        self.call_later(self._clear_footer_message, delay=3.0)
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
@@ -381,6 +399,14 @@ class SkillListScreen(Screen):
 
     def _update_footer(self) -> None:
         """Update the footer messages"""
+        try:
+            footer_left = self.query_one("#footer-left", Static)
+            footer_left.update(self._get_footer_left())
+        except Exception:
+            pass
+
+    def _clear_footer_message(self) -> None:
+        """Clear the footer message after a delay"""
         try:
             footer_left = self.query_one("#footer-left", Static)
             footer_left.update(self._get_footer_left())
