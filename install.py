@@ -16,7 +16,6 @@ import shutil
 from pathlib import Path
 from typing import Set, List
 from dataclasses import dataclass
-import asyncio
 
 from textual.app import ComposeResult, App
 from textual.containers import Container, Vertical
@@ -305,9 +304,9 @@ class SkillListScreen(Screen):
             return
 
         try:
-            footer = self.query_one("#footer", Static)
+            footer_left = self.query_one("#footer-left", Static)
             list_view = self.query_one(ListView)
-        except Exception:
+        except Exception as e:
             return
 
         # Count what we're doing
@@ -321,8 +320,10 @@ class SkillListScreen(Screen):
 
             try:
                 if is_installed:
+                    # Remove
                     shutil.rmtree(dest_path)
                 else:
+                    # Install
                     source_dir = next(
                         (
                             s.path
@@ -339,7 +340,7 @@ class SkillListScreen(Screen):
                     DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
             except Exception as e:
-                footer.update(f"❌ Error installing {skill_name}: {e}")
+                footer_left.update(f"❌ Error: {str(e)[:50]}")
                 return
 
         # Update state
@@ -354,18 +355,15 @@ class SkillListScreen(Screen):
 
         self.selected_skills.clear()
 
-        # Show success message with details
-        msg = "✓ Done!"
-        if to_install:
-            msg += f" Installed: {len(to_install)}"
-        if to_remove:
-            if to_install:
-                msg += " |"
-            msg += f" Removed: {len(to_remove)}"
-        footer.update(msg)
+        # Show success message
+        if to_install and to_remove:
+            msg = f"✓ Installed {len(to_install)}, Removed {len(to_remove)}"
+        elif to_install:
+            msg = f"✓ Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+        else:
+            msg = f"✓ Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
-        # Clear message after 3 seconds
-        self.call_later(self._clear_footer_message, delay=3.0)
+        footer_left.update(msg)
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
@@ -399,14 +397,6 @@ class SkillListScreen(Screen):
 
     def _update_footer(self) -> None:
         """Update the footer messages"""
-        try:
-            footer_left = self.query_one("#footer-left", Static)
-            footer_left.update(self._get_footer_left())
-        except Exception:
-            pass
-
-    def _clear_footer_message(self) -> None:
-        """Clear the footer message after a delay"""
         try:
             footer_left = self.query_one("#footer-left", Static)
             footer_left.update(self._get_footer_left())
