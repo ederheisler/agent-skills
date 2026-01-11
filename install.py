@@ -351,11 +351,15 @@ class SkillListScreen(Screen):
         self.installed = get_installed_skills(DESTINATION)
 
         # Clear selections and refresh display
-        for item in list_view.children:
-            if isinstance(item, SkillItem):
-                item.selected = False
-                item.is_installed = item.skill.dir_name in self.installed
-                self._update_item_display(item)
+        try:
+            list_view = self.query_one(ListView)
+            for i, item in enumerate(list_view.children):
+                if isinstance(item, SkillItem):
+                    item.selected = False
+                    item.is_installed = item.skill.dir_name in self.installed
+                    self._update_item_display(item)
+        except Exception:
+            pass
 
         self.selected_skills.clear()
 
