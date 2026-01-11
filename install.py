@@ -17,13 +17,11 @@ from pathlib import Path
 from typing import Set, List
 from dataclasses import dataclass
 
-from textual.app import ComposeResult
-from textual.containers import Vertical, Container
+from textual.app import ComposeResult, App
+from textual.containers import Container, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Button, Static, ListView, ListItem, Label
 from textual.binding import Binding
-from textual.widget import Widget
-from textual.events import Key
 
 SKILLS_DIR = Path("skills")
 DEFAULT_BASE_DIR = Path.home() / "Code"
@@ -96,113 +94,87 @@ def get_installed_skills(destination: Path) -> Set[str]:
     return {d.name for d in destination.iterdir() if d.is_dir()}
 
 
-class SkillSelector(Static):
-    """Custom skill list selector"""
+class SkillItem(ListItem):
+    """A skill in the list with selection state"""
 
-    DEFAULT_CSS = """
-    SkillSelector {
-        background: $panel;
-        height: 1fr;
-        overflow: auto;
-    }
-    """
+    def __init__(self, skill: SkillInfo, is_installed: bool):
+        self.skill = skill
+        self.is_installed = is_installed
+        self.selected = False
 
-    def __init__(self, skills: List[SkillInfo], installed: Set[str]):
-        super().__init__()
-        self.skills = skills
-        self.installed = installed
-        self.selected: Set[str] = set()
-        self.cursor = 0
-        self.render_content()
+        # Create label text
+        status = "•" if is_installed else " "
+        label_text = f"[{status}] {skill.name}"
+        if skill.description and skill.description != "No description":
+            label_text += f" — {skill.description[:45]}"
 
-    def render_content(self) -> None:
-        """Render the skill list"""
-        lines = []
-        for idx, skill in enumerate(self.skills):
-            is_selected = skill.dir_name in self.selected
-            is_installed = skill.dir_name in self.installed
-            
-            # Build the line
-            cursor = "▶ " if idx == self.cursor else "  "
-            checkbox = "[✓]" if is_selected else "[ ]"
-            status = "•" if is_installed else " "
-            
-            line = f"{cursor}{checkbox} {status} {skill.name}"
-            
-            # Highlight current row
-            if idx == self.cursor:
-                lines.append(f"[reverse]{line}[/reverse]")
-            else:
-                lines.append(line)
-        
-        self.update("\n".join(lines))
-
-    def on_key(self, event: Key) -> None:
-        """Handle keyboard input"""
-        if event.key == "up":
-            self.cursor = max(0, self.cursor - 1)
-            self.render_content()
-            event.prevent_default()
-        elif event.key == "down":
-            self.cursor = min(len(self.skills) - 1, self.cursor + 1)
-            self.render_content()
-            event.prevent_default()
-        elif event.key == "space":
-            skill_name = self.skills[self.cursor].dir_name
-            if skill_name in self.selected:
-                self.selected.remove(skill_name)
-            else:
-                self.selected.add(skill_name)
-            self.render_content()
-            event.prevent_default()
-
-    def get_selected(self) -> Set[str]:
-        return self.selected
-
-    def clear_selection(self) -> None:
-        self.selected.clear()
-        self.render_content()
+        super().__init__(Label(label_text))
 
 
 class SkillListScreen(Screen):
     """Screen for selecting and installing skills"""
 
     BINDINGS = [
-        Binding("escape", "clear_selections", "Clear All"),
-        Binding("enter", "execute_install", "Apply"),
-        Binding("q", "quit", "Quit"),
+        Binding("space", "toggle_skill", "Toggle", show=True),
+        Binding("escape", "clear_selections", "Clear All", show=True),
+        Binding("enter", "execute_install", "Apply", show=True),
+        Binding("q", "quit", "Quit", show=True),
     ]
 
     CSS = """
     SkillListScreen {
         layout: vertical;
+        background: $surface;
     }
 
-    #title {
-        height: 1;
+    #header {
+        height: 3;
         background: $primary;
         color: $text;
-        text-align: center;
+        border-bottom: heavy $accent;
+        padding: 1;
+    }
+
+    #header-title {
+        width: 1fr;
+        text-style: bold;
+        color: $text;
+    }
+
+    #header-info {
+        width: 1fr;
+        color: $text;
+        opacity: 0.8;
+    }
+
+    ListView {
+        border: solid $accent;
+        margin: 1;
+        background: $boost;
+        height: 1fr;
+    }
+
+    ListItem {
+        padding: 0 1;
+        height: auto;
+    }
+
+    ListItem:hover {
+        background: $primary 20%;
+    }
+
+    ListItem:focus {
+        background: $primary;
         text-style: bold;
     }
 
-    #info {
-        height: 1;
-        background: $boost;
-        color: $text;
-        padding: 0 1;
-    }
-
-    SkillSelector {
-        border: solid $accent;
-        margin: 1;
-    }
-
-    #status {
-        height: 1;
+    #footer {
+        height: 2;
         background: $secondary;
         color: $text;
+        border-top: heavy $accent;
         padding: 0 1;
+        content-align: center middle;
     }
     """
 
@@ -211,17 +183,24 @@ class SkillListScreen(Screen):
         self.destination = destination
         self.available_skills = available_skills
         self.installed = get_installed_skills(destination)
-        self.skill_selector: SkillSelector | None = None
+        self.selected_skills: Set[str] = set()
 
     def compose(self) -> ComposeResult:
-        yield Static(self._get_title(), id="title")
-        yield Static(self._get_info(), id="info")
-        
-        skill_selector = SkillSelector(self.available_skills, self.installed)
-        self.skill_selector = skill_selector
-        yield skill_selector
-        
-        yield Static(self._get_status(), id="status")
+        # Header
+        with Container(id="header"):
+            yield Label(self._get_title(), id="header-title")
+            yield Label(self._get_header_info(), id="header-info")
+
+        # Skill list
+        list_view = ListView()
+        for skill in self.available_skills:
+            is_installed = skill.dir_name in self.installed
+            item = SkillItem(skill, is_installed)
+            list_view.append(item)
+        yield list_view
+
+        # Footer
+        yield Static(self._get_footer(), id="footer")
 
     def _get_title(self) -> str:
         if self.destination == GLOBAL_SKILLS_DIR:
@@ -232,41 +211,68 @@ class SkillListScreen(Screen):
             return "📦 Claude (.claude/skills/)"
         return f"📦 {self.destination}"
 
-    def _get_info(self) -> str:
+    def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
-    def _get_status(self) -> str:
-        if not self.skill_selector:
-            return "Ready"
-        selected = self.skill_selector.get_selected()
-        if not selected:
-            return "Space: select | Enter: apply | ESC: clear | Q: quit"
-        
-        install = len([s for s in selected if s not in self.installed])
-        remove = len([s for s in selected if s in self.installed])
-        return f"Selected: {len(selected)} (install: {install}, remove: {remove}) | Enter: apply"
+    def _get_footer(self) -> str:
+        if not self.selected_skills:
+            return "Space: toggle | Enter: apply | Esc: clear | Q: quit"
 
-    def on_key(self, event: Key) -> None:
-        """Update status on any key"""
-        status = self.query_one("#status", Static)
-        status.update(self._get_status())
+        install = len([s for s in self.selected_skills if s not in self.installed])
+        remove = len([s for s in self.selected_skills if s in self.installed])
+        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove}) | Enter: apply"
+
+    def action_toggle_skill(self) -> None:
+        """Toggle the selected skill"""
+        list_view = self.query_one(ListView)
+        if list_view.index is not None:
+            item = list_view.children[list_view.index]
+            if isinstance(item, SkillItem):
+                item.selected = not item.selected
+                skill_name = item.skill.dir_name
+
+                # Update selection set
+                if item.selected:
+                    self.selected_skills.add(skill_name)
+                else:
+                    self.selected_skills.discard(skill_name)
+
+                # Update item display
+                self._update_item_display(item)
+                self._update_footer()
+
+    def _update_item_display(self, item: SkillItem) -> None:
+        """Update the display of a skill item"""
+        checkbox = "✓" if item.selected else " "
+        status = "•" if item.is_installed else " "
+        text = f"[{checkbox}][{status}] {item.skill.name}"
+        if item.skill.description and item.skill.description != "No description":
+            text += f" — {item.skill.description[:45]}"
+
+        # Update the label
+        label = item.children[0]
+        if isinstance(label, Label):
+            label.update(text)
 
     def action_clear_selections(self) -> None:
-        if self.skill_selector:
-            self.skill_selector.clear_selection()
-            self.query_one("#status", Static).update(self._get_status())
+        """Clear all selections"""
+        list_view = self.query_one(ListView)
+        for item in list_view.children:
+            if isinstance(item, SkillItem):
+                item.selected = False
+                self._update_item_display(item)
+
+        self.selected_skills.clear()
+        self._update_footer()
 
     def action_execute_install(self) -> None:
-        if not self.skill_selector:
-            return
-        
-        selected = self.skill_selector.get_selected()
-        if not selected:
+        """Execute the installation/removal of selected skills"""
+        if not self.selected_skills:
             return
 
-        status_widget = self.query_one("#status", Static)
+        footer = self.query_one("#footer", Static)
 
-        for skill_name in sorted(selected):
+        for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = self.destination / skill_name
 
@@ -275,8 +281,12 @@ class SkillListScreen(Screen):
                     shutil.rmtree(dest_path)
                 else:
                     source_dir = next(
-                        (s.path for s in self.available_skills if s.dir_name == skill_name),
-                        None
+                        (
+                            s.path
+                            for s in self.available_skills
+                            if s.dir_name == skill_name
+                        ),
+                        None,
                     )
                     if not source_dir:
                         continue
@@ -284,14 +294,27 @@ class SkillListScreen(Screen):
                         shutil.rmtree(dest_path)
                     shutil.copytree(source_dir, dest_path)
             except Exception as e:
-                status_widget.update(f"Error: {e}")
+                footer.update(f"❌ Error: {e}")
                 return
 
+        # Update state
         self.installed = get_installed_skills(self.destination)
-        self.skill_selector.installed = self.installed
-        self.skill_selector.selected.clear()
-        self.skill_selector.render_content()
-        status_widget.update("✓ Done")
+
+        # Clear selections and refresh display
+        list_view = self.query_one(ListView)
+        for item in list_view.children:
+            if isinstance(item, SkillItem):
+                item.selected = False
+                item.is_installed = item.skill.dir_name in self.installed
+                self._update_item_display(item)
+
+        self.selected_skills.clear()
+        footer.update("✓ Done!")
+
+    def _update_footer(self) -> None:
+        """Update the footer message"""
+        footer = self.query_one("#footer", Static)
+        footer.update(self._get_footer())
 
     def action_quit(self) -> None:
         self.app.exit()
@@ -306,6 +329,7 @@ class DestinationScreen(Screen):
     DestinationScreen {
         layout: vertical;
         align: center middle;
+        background: $surface;
     }
 
     #container {
@@ -320,23 +344,36 @@ class DestinationScreen(Screen):
         height: 1;
         text-align: center;
         text-style: bold;
-        margin-bottom: 1;
+        margin-bottom: 2;
+        color: $text;
     }
 
     Button {
         margin: 0 0 1 0;
         width: 100%;
     }
+
+    Button:focus {
+        background: $primary;
+    }
     """
 
     def compose(self) -> ComposeResult:
         with Container(id="container"):
-            yield Static("📦 Select Installation Destination", id="title")
-            
+            yield Label("📦 Select Installation Destination", id="title")
+
             with Vertical():
-                yield Button("Global (~/.config/opencode/skill/)", id="btn-global", variant="primary")
-                yield Button("OpenCode (.opencode/skill/)", id="btn-opencode", variant="primary")
-                yield Button("Claude (.claude/skills/)", id="btn-claude", variant="primary")
+                yield Button(
+                    "Global (~/.config/opencode/skill/)",
+                    id="btn-global",
+                    variant="primary",
+                )
+                yield Button(
+                    "OpenCode (.opencode/skill/)", id="btn-opencode", variant="primary"
+                )
+                yield Button(
+                    "Claude (.claude/skills/)", id="btn-claude", variant="primary"
+                )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         destinations = {
@@ -348,30 +385,32 @@ class DestinationScreen(Screen):
         if event.button.id in destinations:
             destination = destinations[event.button.id]
             skills = list_skills()
-            
+
             if not skills:
                 self.app.exit("No skills found")
                 return
-            
+
             self.app.push_screen(SkillListScreen(destination, skills))
 
     def action_quit(self) -> None:
         self.app.exit()
 
 
+class InstallerApp(App):
+    """Main installer application"""
+
+    BINDINGS = [Binding("ctrl+c", "quit")]
+
+    CSS = """
+    Screen {
+        background: $surface;
+    }
+    """
+
+    def on_mount(self) -> None:
+        self.push_screen(DestinationScreen())
+
+
 if __name__ == "__main__":
-    from textual.app import App
-
-    class InstallerApp(App):
-        BINDINGS = [Binding("ctrl+c", "quit")]
-
-        CSS = """
-        Screen {
-            background: $surface;
-        }
-        """
-
-        def on_mount(self) -> None:
-            self.push_screen(DestinationScreen())
-
-    InstallerApp().run()
+    app = InstallerApp()
+    app.run()
