@@ -424,24 +424,31 @@ class SkillListScreen(Screen):
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
-        # Build marker with consistent visual width and spacing
+        # Build marker with original design and fixed width
         if item.selected:
             if item.is_installed:
-                # Will be removed - use single char marker
-                marker = "[red]×[/red]"
+                # Yellow o + Red × to show it will be removed
+                marker = "[yellow]o[/yellow][red]✖[/red]"
             else:
-                # Will be installed - use single char marker
-                marker = "[green]+[/green]"
+                # White/gray ✓ to show it will be installed
+                marker = "[white]✓[/white]"
         else:
             if item.is_installed:
-                # Installed - use single char marker
-                marker = "[yellow]●[/yellow]"
+                # Yellow o for installed
+                marker = "[yellow]o[/yellow]"
             else:
-                # Not installed - space
+                # Space for not installed
                 marker = " "
 
-        # Consistent spacing: 3 spaces after marker
-        text = f"{marker}   {item.skill.name}"
+        # Ensure consistent width by padding markers
+        if item.selected and item.is_installed:
+            # o✖ is already 2 visual chars, add 2 spaces
+            marker_display = f"{marker}  "
+        else:
+            # Single char markers get 3 spaces
+            marker_display = f"{marker}   "
+
+        text = f"{marker_display}{item.skill.name}"
         if item.skill.description:
             desc = item.skill.description[:60]
             if len(item.skill.description) > 60:

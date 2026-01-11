@@ -1,0 +1,21 @@
+2026-01-10 23:58:07,837 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-01-10 23:58:07,841 - __main__ - INFO - === InstallerApp mounted ===
+2026-01-10 23:58:07,841 - __main__ - INFO - === SkillListScreen initialized ===
+2026-01-10 23:58:07,843 - __main__ - INFO - Available skills: 27
+2026-01-10 23:58:07,843 - __main__ - INFO - Installed skills: {'canvas-design', 'brainstorming', 'quality-gates'}
+2026-01-10 23:58:07,843 - __main__ - INFO - Destination: /Users/eder/Code/.config/opencode/skill
+2026-01-10 23:58:08,554 - __main__ - DEBUG - Key pressed: down
+2026-01-10 23:58:08,749 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:58:08,749 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:58:08,749 - __main__ - INFO - Toggled skill: brainstorming, selected=True
+2026-01-10 23:58:09,576 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:58:09,576 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:58:09,576 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-10 23:58:09,995 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:58:09,995 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:58:09,995 - __main__ - INFO - Toggled skill: brainstorming, selected=True
+2026-01-10 23:58:10,295 - __main__ - DEBUG - Key pressed: space
+2026-01-10 23:58:10,295 - __main__ - DEBUG - Action: toggle_skill
+2026-01-10 23:58:10,295 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-10 23:58:11,065 - __main__ - DEBUG - Key pressed: q
+2026-01-10 23:58:11,065 - __main__ - INFO - Action: quit
