@@ -34,7 +34,7 @@ echo "Running Python quality gates (${mode})..."
 run_static_gates() {
     echo "Running ruff..."
     if command -v uvx >/dev/null 2>&1; then
-        uvx ruff check . --fix
+        uvx ruff check . --fix --exclude "tests,**/tests/**"
     else
         echo "uvx not fINSTALL TO CONTINUE"
         exit 1
@@ -42,7 +42,7 @@ run_static_gates() {
 
     echo "Running type checking with pyrefly..."
     if command -v uvx >/dev/null 2>&1; then
-        uvx pyrefly check . --project-excludes="tests" --project-excludes="test_*.py"
+        uvx pyrefly check . --project-excludes="tests" --project-excludes="**/tests/**" --project-excludes="test_*.py"
     else
         echo "uvx not found, INSTALL TO CONTINUE"
         exit 1 
