@@ -521,8 +521,14 @@ class SkillListScreen(Screen):
         self.app.exit()
 
     def on_key(self, event) -> None:
-        """Log all key presses"""
+        """Log all key presses and handle Enter manually"""
         logger.debug(f"Key pressed: {event.key}")
+
+        # Handle Enter key manually since ListView consumes it
+        if event.key == "enter":
+            logger.debug("Enter key detected, calling action_execute_install")
+            self.action_execute_install()
+            event.prevent_default()
 
 
 class InstallerApp(App):
