@@ -106,23 +106,54 @@ def get_skill_info(skill_dir: Path) -> SkillInfo:
 
 
 def list_skills() -> List[SkillInfo]:
-    """List all available skills, sorted by name"""
-    if not SKILLS_DIR.exists():
-        return []
-
+    """List all available skills, sorted by name, with plugin script first"""
     skills = []
-    for skill_dir in sorted(SKILLS_DIR.iterdir()):
-        if skill_dir.is_dir():
-            skills.append(get_skill_info(skill_dir))
 
-    return sorted(skills, key=lambda s: s.name)
+    # Add plugin script first
+    plugin_path = (
+        Path.home()
+        / ".config"
+        / "opencode"
+        / "superpowers"
+        / ".opencode"
+        / "plugin"
+        / "superpowers.js"
+    )
+    plugin_skill = SkillInfo(
+        name="superpowers.js",
+        description="OpenCode plugin for superpowers integration",
+        path=plugin_path.parent,
+        dir_name="superpowers.js",
+    )
+    skills.append(plugin_skill)
+
+    # Add separator (empty skill for visual gap)
+    separator_skill = SkillInfo(name="", description="", path=Path(""), dir_name="")
+    skills.append(separator_skill)
+
+    # Add regular skills
+    if SKILLS_DIR.exists():
+        for skill_dir in sorted(SKILLS_DIR.iterdir()):
+            if skill_dir.is_dir():
+                skills.append(get_skill_info(skill_dir))
+
+    return skills
 
 
 def get_installed_skills(destination: Path) -> Set[str]:
     """Get installed skill names"""
-    if not destination.exists():
-        return set()
-    return {d.name for d in destination.iterdir() if d.is_dir()}
+    installed = set()
+
+    # Check regular skills
+    if destination.exists():
+        installed.update({d.name for d in destination.iterdir() if d.is_dir()})
+
+    # Check plugin script
+    plugin_target = Path.home() / ".config" / "opencode" / "plugin" / "superpowers.js"
+    if plugin_target.exists() and plugin_target.is_symlink():
+        installed.add("superpowers.js")
+
+    return installed
 
 
 class SkillItem(ListItem):
@@ -139,6 +170,10 @@ class SkillItem(ListItem):
 
     def _format_skill_text(self) -> str:
         """Format skill as aligned columns: MARKER | TITLE | DESCRIPTION"""
+        # Handle separator (empty skill for visual gap)
+        if not self.skill.name:
+            return ""
+
         # Column 1: Marker (3 chars wide)
         if self.selected:
             if self.is_installed:
@@ -159,10 +194,10 @@ class SkillItem(ListItem):
             # Single chars get 2 spaces
             marker_col = f"{marker}  "
 
-        # Column 2: Title (32 chars wide to fit longest name)
+        # Column 2: Title (32 chars wide)
         title_col = f"{self.skill.name:<32}"
 
-        # Column 3: Description (starts after title column)
+        # Column 3: Description (remaining space)
         desc_col = ""
         if self.skill.description:
             desc_col = f"  {self.skill.description}"
@@ -240,124 +275,6 @@ class DescriptionModal(Screen):
         self.app.pop_screen()
 
 
-class InstallScriptModal(Screen):
-    """Modal to confirm installing the installer script"""
-
-    MODAL = True
-
-    BINDINGS = [
-        Binding("i", "install_script", "Install", show=True),
-        Binding("c", "cancel_install", "Cancel", show=True),
-    ]
-
-    CSS = """
-    InstallScriptModal {
-        align: center middle;
-        background: rgba(0,0,0,0.7);
-    }
-
-    #modal-container {
-        width: 80;
-        height: auto;
-        background: $surface;
-        border: solid $primary;
-        padding: 2;
-    }
-
-    #title {
-        text-align: center;
-        margin-bottom: 1;
-        text-style: bold;
-        color: $text;
-    }
-
-    #description {
-        width: 100%;
-        height: auto;
-    }
-
-    #buttons {
-        layout: horizontal;
-        align: center middle;
-        margin-top: 2;
-    }
-    """
-
-    def compose(self):
-        """Show OpenCode plugin installation confirmation"""
-        from textual.widgets import Static, Button
-        from textual.containers import Vertical, Center
-
-        with Vertical(id="modal-container"):
-            yield Static("Install OpenCode Plugin", id="title")
-            yield Static(
-                "This will create the plugin directory and symlink for OpenCode integration.",
-                id="description",
-            )
-            with Center():
-                yield Button("Install (I)", id="install_btn")
-                yield Button("Cancel (C)", id="cancel_btn")
-
-    def on_button_pressed(self, event):
-        """Handle button press"""
-        if event.button.id == "install_btn":
-            self._install_script()
-        elif event.button.id == "cancel_btn":
-            self.app.pop_screen()
-
-    def action_install_script(self):
-        """Install the script"""
-        self._install_script()
-
-    def action_cancel_install(self):
-        """Cancel installation"""
-        self.app.pop_screen()
-
-    def _install_script(self):
-        """Install OpenCode plugin symlink using Python"""
-        try:
-            # Create plugin directory
-            plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
-            plugin_dir.mkdir(parents=True, exist_ok=True)
-
-            # Create symlink
-            source = (
-                Path.home()
-                / ".config"
-                / "opencode"
-                / "superpowers"
-                / ".opencode"
-                / "plugin"
-                / "superpowers.js"
-            )
-            target = plugin_dir / "superpowers.js"
-
-            # Remove existing symlink/file if it exists
-            if target.exists() or target.is_symlink():
-                target.unlink()
-
-            # Create symlink
-            target.symlink_to(source)
-
-            # Show success
-            self.app.notify(
-                "OpenCode plugin installed successfully",
-                title="✅ Success",
-                severity="information",
-                timeout=4.0,
-            )
-            self.app.pop_screen()
-
-        except Exception as e:
-            self.app.notify(
-                f"Failed: {str(e)}",
-                title="❌ Error",
-                severity="error",
-                timeout=4.0,
-            )
-            self.app.pop_screen()
-
-
 class SkillListScreen(Screen):
     """Main screen for selecting and installing skills"""
 
@@ -365,7 +282,6 @@ class SkillListScreen(Screen):
         Binding("space", "toggle_skill", "Toggle", show=True),
         Binding("enter", "execute_install", "Apply", show=True),
         Binding("e", "show_description", "Description", show=True),
-        Binding("i", "install_script", "Install Plugin", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
 
@@ -492,7 +408,7 @@ class SkillListScreen(Screen):
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer_left(self) -> str:
-        return "Space: Toggle  Enter: Apply  E: Description  I: Install Plugin  Q: Quit"
+        return "Space: Toggle  Enter: Apply  E: Description  Q: Quit"
 
     def _get_footer_right(self) -> str:
         return str(DESTINATION)
@@ -566,33 +482,75 @@ class SkillListScreen(Screen):
             logger.debug(f"Processing {skill_name}: is_installed={is_installed}")
 
             try:
-                if is_installed:
-                    # Remove
-                    logger.info(f"Removing {skill_name}")
-                    shutil.rmtree(dest_path)
-                    debug_log.append(f"Removed {skill_name}")
+                if skill_name == "superpowers.js":
+                    # Handle plugin script specially
+                    if is_installed:
+                        # Remove plugin symlink
+                        logger.info(f"Removing plugin {skill_name}")
+                        plugin_target = (
+                            Path.home()
+                            / ".config"
+                            / "opencode"
+                            / "plugin"
+                            / "superpowers.js"
+                        )
+                        if plugin_target.exists():
+                            plugin_target.unlink()
+                        debug_log.append(f"Removed plugin {skill_name}")
+                    else:
+                        # Install plugin symlink
+                        logger.info(f"Installing plugin {skill_name}")
+                        plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
+                        plugin_dir.mkdir(parents=True, exist_ok=True)
+
+                        source = (
+                            Path.home()
+                            / ".config"
+                            / "opencode"
+                            / "superpowers"
+                            / ".opencode"
+                            / "plugin"
+                            / "superpowers.js"
+                        )
+                        target = plugin_dir / "superpowers.js"
+
+                        # Remove existing if any
+                        if target.exists() or target.is_symlink():
+                            target.unlink()
+
+                        # Create symlink
+                        target.symlink_to(source)
+                        logger.info(f"✓ Installed plugin {skill_name}")
+                        debug_log.append(f"Installed plugin {skill_name}")
                 else:
-                    # Install
-                    logger.info(f"Installing {skill_name}")
-                    source_dir = next(
-                        (
-                            s.path
-                            for s in self.available_skills
-                            if s.dir_name == skill_name
-                        ),
-                        None,
-                    )
-                    if not source_dir:
-                        logger.warning(f"Source not found for {skill_name}")
-                        debug_log.append(f"Source not found for {skill_name}")
-                        continue
-                    if dest_path.exists():
+                    # Handle regular skills
+                    if is_installed:
+                        # Remove
+                        logger.info(f"Removing {skill_name}")
                         shutil.rmtree(dest_path)
-                    # Ensure destination directory exists
-                    DESTINATION.mkdir(parents=True, exist_ok=True)
-                    shutil.copytree(source_dir, dest_path)
-                    logger.info(f"✓ Installed {skill_name}")
-                    debug_log.append(f"Installed {skill_name}")
+                        debug_log.append(f"Removed {skill_name}")
+                    else:
+                        # Install
+                        logger.info(f"Installing {skill_name}")
+                        source_dir = next(
+                            (
+                                s.path
+                                for s in self.available_skills
+                                if s.dir_name == skill_name
+                            ),
+                            None,
+                        )
+                        if not source_dir:
+                            logger.warning(f"Source not found for {skill_name}")
+                            debug_log.append(f"Source not found for {skill_name}")
+                            continue
+                        if dest_path.exists():
+                            shutil.rmtree(dest_path)
+                        # Ensure destination directory exists
+                        DESTINATION.mkdir(parents=True, exist_ok=True)
+                        shutil.copytree(source_dir, dest_path)
+                        logger.info(f"✓ Installed {skill_name}")
+                        debug_log.append(f"Installed {skill_name}")
             except Exception as e:
                 logger.error(f"Error with {skill_name}: {e}", exc_info=True)
                 debug_log.append(f"Error with {skill_name}: {e}")
@@ -686,12 +644,6 @@ class SkillListScreen(Screen):
                     self.app.push_screen(modal)
         except Exception as e:
             logger.error(f"Error showing description: {e}")
-
-    def action_install_script(self) -> None:
-        """Install the installer script to OpenCode folder"""
-        # Create confirmation modal
-        modal = InstallScriptModal()
-        self.app.push_screen(modal)
 
     def action_quit(self) -> None:
         logger.info("Action: quit")
