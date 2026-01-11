@@ -24,7 +24,10 @@ from textual.widgets import Static, ListView, ListItem, Label
 from textual.binding import Binding
 
 SKILLS_DIR = Path("skills")
-DESTINATION = Path.cwd() / ".opencode" / "skill"
+DEFAULT_BASE_DIR = Path.home() / "Code"
+if not DEFAULT_BASE_DIR.exists():
+    DEFAULT_BASE_DIR = Path.home()
+DESTINATION = DEFAULT_BASE_DIR / ".config" / "opencode" / "skill"
 
 
 @dataclass
@@ -215,7 +218,7 @@ class SkillListScreen(Screen):
         yield Static(self._get_footer(), id="footer")
 
     def _get_title(self) -> str:
-        return "📦 Skills Manager (.opencode/skill/)"
+        return f"📦 Skills Manager ({DESTINATION})"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
