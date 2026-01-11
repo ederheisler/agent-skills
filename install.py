@@ -16,12 +16,30 @@ import shutil
 from pathlib import Path
 from typing import Set, List
 from dataclasses import dataclass
+import logging
+from datetime import datetime
 
 from textual.app import ComposeResult, App
 from textual.containers import Container, Vertical
 from textual.screen import Screen
 from textual.widgets import Static, ListView, ListItem, Label
 from textual.binding import Binding
+
+# Setup logging
+LOG_DIR = Path.home() / ".config" / "opencode" / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE = LOG_DIR / f"installer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 SKILLS_DIR = Path("skills")
 DEFAULT_BASE_DIR = Path.home() / "Code"
@@ -211,9 +229,13 @@ class SkillListScreen(Screen):
 
     def __init__(self):
         super().__init__()
+        logger.info("=== SkillListScreen initialized ===")
         self.available_skills = list_skills()
         self.installed = get_installed_skills(DESTINATION)
         self.selected_skills: Set[str] = set()
+        logger.info(f"Available skills: {len(self.available_skills)}")
+        logger.info(f"Installed skills: {self.installed}")
+        logger.info(f"Destination: {DESTINATION}")
 
     def compose(self) -> ComposeResult:
         # Header
@@ -262,6 +284,7 @@ class SkillListScreen(Screen):
 
     def action_toggle_skill(self) -> None:
         """Toggle the selected skill"""
+        logger.debug("Action: toggle_skill")
         try:
             list_view = self.query_one(ListView)
             if list_view.index is not None and list_view.index < len(
@@ -278,11 +301,14 @@ class SkillListScreen(Screen):
                     else:
                         self.selected_skills.discard(skill_name)
 
+                    logger.info(
+                        f"Toggled skill: {skill_name}, selected={item.selected}"
+                    )
                     # Update item display
                     self._update_item_display(item)
                     self._update_footer()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Error in toggle_skill: {e}", exc_info=True)
 
     def action_clear_selections(self) -> None:
         """Clear all selections"""
@@ -300,23 +326,26 @@ class SkillListScreen(Screen):
 
     def action_execute_install(self) -> None:
         """Execute the installation/removal of selected skills"""
+        logger.info(f"Action: execute_install, selected={self.selected_skills}")
         debug_log = []
 
         if not self.selected_skills:
-            debug_log.append("No selected skills")
+            logger.debug("No selected skills")
             return
 
         try:
             footer_left = self.query_one("#footer-left", Static)
             list_view = self.query_one(ListView)
             debug_log.append("Got footer_left and list_view")
+            logger.debug("Got footer_left and list_view")
         except Exception as e:
-            debug_log.append(f"Exception getting widgets: {e}")
+            logger.error(f"Exception getting widgets: {e}", exc_info=True)
             return
 
         # Count what we're doing
         to_install = [s for s in self.selected_skills if s not in self.installed]
         to_remove = [s for s in self.selected_skills if s in self.installed]
+        logger.info(f"to_install={to_install}, to_remove={to_remove}")
         debug_log.append(f"to_install={to_install}, to_remove={to_remove}")
 
         # Execute operations
@@ -324,15 +353,17 @@ class SkillListScreen(Screen):
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
-            debug_log.append(f"Processing {skill_name}: is_installed={is_installed}")
+            logger.debug(f"Processing {skill_name}: is_installed={is_installed}")
 
             try:
                 if is_installed:
                     # Remove
+                    logger.info(f"Removing {skill_name}")
                     shutil.rmtree(dest_path)
                     debug_log.append(f"Removed {skill_name}")
                 else:
                     # Install
+                    logger.info(f"Installing {skill_name}")
                     source_dir = next(
                         (
                             s.path
@@ -342,6 +373,7 @@ class SkillListScreen(Screen):
                         None,
                     )
                     if not source_dir:
+                        logger.warning(f"Source not found for {skill_name}")
                         debug_log.append(f"Source not found for {skill_name}")
                         continue
                     if dest_path.exists():
@@ -349,14 +381,56 @@ class SkillListScreen(Screen):
                     # Ensure destination directory exists
                     DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
+                    logger.info(f"✓ Installed {skill_name}")
                     debug_log.append(f"Installed {skill_name}")
             except Exception as e:
+                logger.error(f"Error with {skill_name}: {e}", exc_info=True)
                 debug_log.append(f"Error with {skill_name}: {e}")
                 errors.append(f"{skill_name}: {str(e)}")
 
-        # Write debug log
-        with open("/tmp/skills_install.log", "w") as f:
-            f.write("\n".join(debug_log))
+        if errors:
+            msg = f"❌ Error: {errors[0][:40]}"
+            logger.error(f"Installation failed: {errors}")
+            footer_left.update(msg)
+            return
+
+        # Update state
+        self.installed = get_installed_skills(DESTINATION)
+        logger.info(f"Updated installed: {self.installed}")
+        debug_log.append(f"Updated installed: {self.installed}")
+
+        # Clear selections and refresh display
+        try:
+            list_view = self.query_one(ListView)
+            for i, item in enumerate(list_view.children):
+                if isinstance(item, SkillItem):
+                    item.selected = False
+                    item.is_installed = item.skill.dir_name in self.installed
+                    self._update_item_display(item)
+                    logger.debug(f"Updated item {i}: {item.skill.dir_name}")
+        except Exception as e:
+            logger.error(f"Exception updating items: {e}", exc_info=True)
+
+        self.selected_skills.clear()
+
+        # Show success message
+        if to_install and to_remove:
+            msg = f"✓ SUCCESS: Installed {len(to_install)}, Removed {len(to_remove)}"
+        elif to_install:
+            msg = f"✓ SUCCESS: Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+        else:
+            msg = f"✓ SUCCESS: Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
+
+        logger.info(f"Success: {msg}")
+        footer_left.update(f"[bold green]{msg}[/bold green]")
+
+        # Also update header to show new count
+        try:
+            header_info = self.query_one("#header-info", Label)
+            header_info.update(self._get_header_info())
+            logger.debug("Header updated")
+        except Exception as e:
+            logger.error(f"Exception updating header: {e}", exc_info=True)
 
         if errors:
             footer_left.update(f"❌ Error: {errors[0][:40]}")
