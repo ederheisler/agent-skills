@@ -570,6 +570,7 @@ class SkillListScreen(Screen):
 
         # Execute operations
         errors = []
+        plugins_processed = False
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
@@ -582,6 +583,7 @@ class SkillListScreen(Screen):
                     f"Skill check: '{skill_name}' == 'superpowers.js'? {skill_name == 'superpowers.js'}"
                 )
                 if skill_name == "superpowers.js":
+                    plugins_processed = True
                     # Handle plugin script specially
                     if is_installed:
                         # Remove plugin symlink
@@ -750,18 +752,19 @@ class SkillListScreen(Screen):
         self.selected_skills.clear()
         self._update_header()
 
-        # Show success notification
-        if to_install and to_remove:
-            msg = f"Installed {len(to_install)}, Removed {len(to_remove)}"
-        elif to_install:
-            msg = (
-                f"Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
-            )
-        else:
-            msg = f"Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
+        # Show success notification (skip if plugins were processed, they show their own notifications)
+        if not plugins_processed:
+            if to_install and to_remove:
+                msg = f"Installed {len(to_install)}, Removed {len(to_remove)}"
+            elif to_install:
+                msg = f"Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+            else:
+                msg = (
+                    f"Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
+                )
 
-        logger.info(f"Success: {msg}")
-        self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
+            logger.info(f"Success: {msg}")
+            self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
 
         # Also update header to show new count
         try:
