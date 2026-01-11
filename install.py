@@ -257,7 +257,7 @@ class InstallScriptModal(Screen):
     }
 
     #modal-container {
-        width: 90;
+        width: 80;
         height: auto;
         background: $surface;
         border: solid $primary;
@@ -271,60 +271,32 @@ class InstallScriptModal(Screen):
         color: $text;
     }
 
-    #instructions {
+    #description {
         width: 100%;
         height: auto;
-        margin-bottom: 2;
     }
 
     #buttons {
         layout: horizontal;
         align: center middle;
+        margin-top: 2;
     }
     """
 
-    def __init__(self):
-        super().__init__()
-
     def compose(self):
-        """Show installation confirmation"""
+        """Show installation confirmation like description modal"""
         from textual.widgets import Static, Button
-        from textual.containers import Vertical, Horizontal
-
-        # Read instructions from INSTALLER.md
-        instructions = self._get_install_instructions()
+        from textual.containers import Vertical, Center
 
         with Vertical(id="modal-container"):
             yield Static("Install Installer Script", id="title")
-            yield Static(instructions, id="instructions")
-
-            with Horizontal(id="buttons"):
-                yield Button("Install (I)", id="install_btn", variant="primary")
+            yield Static(
+                "This will copy the installer script to ~/.Code/.config/opencode/scripts/ for easy access from OpenCode.",
+                id="description",
+            )
+            with Center():
+                yield Button("Install (I)", id="install_btn")
                 yield Button("Cancel (C)", id="cancel_btn")
-
-    def _get_install_instructions(self) -> str:
-        """Read installation instructions from INSTALLER.md"""
-        try:
-            with open("INSTALLER.md", "r") as f:
-                content = f.read()
-
-            # Extract the Installation section
-            lines = content.split("\n")
-            in_installation = False
-            installation_lines = []
-
-            for line in lines:
-                if line.startswith("## Installation"):
-                    in_installation = True
-                    continue
-                elif line.startswith("## ") and in_installation:
-                    break
-                elif in_installation:
-                    installation_lines.append(line)
-
-            return "\n".join(installation_lines).strip()
-        except Exception:
-            return "This will install the skills installer script to your OpenCode folder for easy access."
 
     def on_button_pressed(self, event):
         """Handle button press"""
@@ -359,7 +331,7 @@ class InstallScriptModal(Screen):
 
             # Show success
             self.app.notify(
-                f"Installer script installed to {dest}",
+                f"Script installed to {dest}",
                 title="✅ Success",
                 severity="information",
                 timeout=4.0,
@@ -368,11 +340,12 @@ class InstallScriptModal(Screen):
 
         except Exception as e:
             self.app.notify(
-                f"Failed to install script: {str(e)}",
+                f"Failed: {str(e)}",
                 title="❌ Error",
                 severity="error",
                 timeout=4.0,
             )
+            self.app.pop_screen()
 
 
 class SkillListScreen(Screen):
