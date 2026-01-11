@@ -150,8 +150,12 @@ def get_installed_skills(destination: Path) -> Set[str]:
 
     # Check plugin script
     plugin_target = Path.home() / ".config" / "opencode" / "plugin" / "superpowers.js"
+    logger.debug(
+        f"Checking plugin: {plugin_target}, exists={plugin_target.exists()}, is_symlink={plugin_target.is_symlink()}"
+    )
     if plugin_target.exists() and plugin_target.is_symlink():
         installed.add("superpowers.js")
+        logger.debug("Plugin superpowers.js detected as installed")
 
     return installed
 
