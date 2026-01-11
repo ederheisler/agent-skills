@@ -45,24 +45,41 @@ def get_skill_info(skill_dir: Path) -> SkillInfo:
     """Extract skill name and description from SKILL.md frontmatter"""
     skill_file = skill_dir / "SKILL.md"
     name = skill_dir.name
-    description = "No description"
+    description = ""
 
     if skill_file.exists():
         try:
             with open(skill_file, "r") as f:
                 content = f.read()
 
+            # Parse YAML frontmatter
             lines = content.split("\n")
+            frontmatter_lines = []
             in_frontmatter = False
+
             for line in lines:
                 if line.strip() == "---":
-                    in_frontmatter = not in_frontmatter
+                    if not in_frontmatter:
+                        in_frontmatter = True
+                    else:
+                        break
                     continue
                 if in_frontmatter:
-                    if line.startswith("name:"):
-                        name = line.split(":", 1)[1].strip()
-                    elif line.startswith("description:"):
-                        description = line.split(":", 1)[1].strip()
+                    frontmatter_lines.append(line)
+
+            # Parse frontmatter as YAML
+            for line in frontmatter_lines:
+                if line.startswith("name:"):
+                    name = line.split(":", 1)[1].strip().strip("\"'")
+                elif line.startswith("description:"):
+                    # Handle quoted descriptions with special characters
+                    desc = line.split(":", 1)[1].strip()
+                    # Remove surrounding quotes if present
+                    if (desc.startswith('"') and desc.endswith('"')) or (
+                        desc.startswith("'") and desc.endswith("'")
+                    ):
+                        desc = desc[1:-1]
+                    description = desc
         except Exception:
             pass
 
@@ -102,11 +119,15 @@ class SkillItem(ListItem):
         self.is_installed = is_installed
         self.selected = False
 
-        # Create label text
+        # Create label text with full description
         status = "•" if is_installed else " "
         label_text = f"[{status}] {skill.name}"
-        if skill.description and skill.description != "No description":
-            label_text += f" — {skill.description[:45]}"
+        if skill.description:
+            # Truncate description to fit reasonably in terminal
+            desc = skill.description[:60]
+            if len(skill.description) > 60:
+                desc += "…"
+            label_text += f" — {desc}"
 
         super().__init__(Label(label_text))
 
@@ -246,8 +267,11 @@ class SkillListScreen(Screen):
         checkbox = "✓" if item.selected else " "
         status = "•" if item.is_installed else " "
         text = f"[{checkbox}][{status}] {item.skill.name}"
-        if item.skill.description and item.skill.description != "No description":
-            text += f" — {item.skill.description[:45]}"
+        if item.skill.description:
+            desc = item.skill.description[:60]
+            if len(item.skill.description) > 60:
+                desc += "…"
+            text += f" — {desc}"
 
         # Update the label
         label = item.children[0]
