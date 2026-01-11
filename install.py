@@ -280,7 +280,6 @@ class InstallScriptModal(Screen):
     #buttons {
         layout: horizontal;
         align: center middle;
-        gap: 2;
     }
     """
 
