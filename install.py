@@ -618,6 +618,54 @@ class SkillListScreen(Screen):
                         )
                         target = plugin_dir / "superpowers.js"
 
+                        # Check if source exists
+                        if not source.exists():
+                            error_msg = f"Source file not found: {source}. Please install superpowers first."
+                            logger.error(f"✗ {error_msg}")
+                            self.app.notify(
+                                error_msg,
+                                title="❌ Error",
+                                severity="error",
+                                timeout=6.0,
+                            )
+                            return
+
+                        # Remove existing if any
+                        if target.exists() or target.is_symlink():
+                            target.unlink()
+
+                        # Create symlink
+                        target.symlink_to(source)
+                        logger.info(
+                            f"✓ Installed plugin {skill_name} -> {target} -> {source}"
+                        )
+                        debug_log.append(f"Installed plugin {skill_name}")
+
+                        # Verify installation
+                        if (
+                            target.exists()
+                            and target.is_symlink()
+                            and target.readlink() == source
+                        ):
+                            logger.info(
+                                f"✓ Verification: symlink exists and points to correct target"
+                            )
+                            success_msg = f"Plugin installed: {target} -> {source}"
+                        else:
+                            logger.error(
+                                f"✗ Verification failed: symlink not created properly"
+                            )
+                            success_msg = f"Plugin installed but verification failed"
+
+                        # Show success notification
+                        self.app.notify(
+                            success_msg,
+                            title="✅ Success",
+                            severity="information",
+                            timeout=6.0,
+                        )
+                        target = plugin_dir / "superpowers.js"
+
                         # Remove existing if any
                         if target.exists() or target.is_symlink():
                             target.unlink()
