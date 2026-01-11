@@ -174,7 +174,7 @@ class DescriptionModal(Screen):
     """Modal overlay to show full skill description"""
 
     BINDINGS = [
-        Binding("escape", "close_modal", "Close", show=True),
+        Binding("space", "close_modal", "Close", show=True),
     ]
 
     MODAL = True  # Make this a modal screen
@@ -182,6 +182,7 @@ class DescriptionModal(Screen):
     CSS = """
     DescriptionModal {
         align: center middle;
+        background: rgba(0,0,0,0.7);  /* Semi-transparent dark background */
     }
 
     #modal-container {
