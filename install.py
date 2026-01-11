@@ -118,7 +118,7 @@ class SkillItem(ListItem):
 
         # Create label text with full description
         if is_installed:
-            label_text = "[yellow]✓[/yellow]"
+            label_text = "[yellow]o[/yellow]"
         else:
             label_text = " "
 
@@ -352,15 +352,15 @@ class SkillListScreen(Screen):
         # Build the marker with colors
         if item.selected:
             if item.is_installed:
-                # Yellow checkmark + Red ✕ to show it will be removed
-                marker = "[yellow]✓[/yellow][red]✕[/red]"
+                # Yellow o + Red × to show it will be removed
+                marker = "[yellow]o[/yellow][red]×[/red]"
             else:
-                # Yellow ✕ to show it will be installed
-                marker = "[yellow]✕[/yellow]"
+                # White/gray ✓ to show it will be installed
+                marker = "[white]✓[/white]"
         else:
             if item.is_installed:
-                # Yellow checkmark for installed
-                marker = "[yellow]✓[/yellow]"
+                # Yellow o for installed
+                marker = "[yellow]o[/yellow]"
             else:
                 # Space for not installed
                 marker = " "
