@@ -644,7 +644,7 @@ class SkillListScreen(Screen):
                             logger.info(
                                 f"✓ Verification: symlink exists and points to correct target"
                             )
-                            success_msg = f"Plugin installed: {target} -> {source}"
+                            success_msg = f"Plugin installed to {target}"
                         else:
                             logger.error(
                                 f"✗ Verification failed: symlink not created properly"
