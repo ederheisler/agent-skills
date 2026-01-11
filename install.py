@@ -228,7 +228,7 @@ class DescriptionModal(Screen):
                     id="description",
                 )
                 with Center():
-                    yield Button("Close (ESC)", id="close_btn")
+                    yield Button("Close (SPACE)", id="close_btn")
 
     def on_button_pressed(self, event):
         """Handle button press"""
@@ -373,7 +373,7 @@ class SkillListScreen(Screen):
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer_left(self) -> str:
-        return "Space: Toggle  Enter: Apply  Q: Quit"
+        return "Space: Toggle  Enter: Apply  E: Description  Q: Quit"
 
     def _get_footer_right(self) -> str:
         return str(DESTINATION)
