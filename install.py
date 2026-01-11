@@ -300,29 +300,37 @@ class SkillListScreen(Screen):
 
     def action_execute_install(self) -> None:
         """Execute the installation/removal of selected skills"""
+        debug_log = []
+
         if not self.selected_skills:
+            debug_log.append("No selected skills")
             return
 
         try:
             footer_left = self.query_one("#footer-left", Static)
             list_view = self.query_one(ListView)
+            debug_log.append("Got footer_left and list_view")
         except Exception as e:
+            debug_log.append(f"Exception getting widgets: {e}")
             return
 
         # Count what we're doing
         to_install = [s for s in self.selected_skills if s not in self.installed]
         to_remove = [s for s in self.selected_skills if s in self.installed]
+        debug_log.append(f"to_install={to_install}, to_remove={to_remove}")
 
         # Execute operations
         errors = []
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
+            debug_log.append(f"Processing {skill_name}: is_installed={is_installed}")
 
             try:
                 if is_installed:
                     # Remove
                     shutil.rmtree(dest_path)
+                    debug_log.append(f"Removed {skill_name}")
                 else:
                     # Install
                     source_dir = next(
@@ -334,14 +342,21 @@ class SkillListScreen(Screen):
                         None,
                     )
                     if not source_dir:
+                        debug_log.append(f"Source not found for {skill_name}")
                         continue
                     if dest_path.exists():
                         shutil.rmtree(dest_path)
                     # Ensure destination directory exists
                     DESTINATION.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source_dir, dest_path)
+                    debug_log.append(f"Installed {skill_name}")
             except Exception as e:
+                debug_log.append(f"Error with {skill_name}: {e}")
                 errors.append(f"{skill_name}: {str(e)}")
+
+        # Write debug log
+        with open("/tmp/skills_install.log", "w") as f:
+            f.write("\n".join(debug_log))
 
         if errors:
             footer_left.update(f"❌ Error: {errors[0][:40]}")
@@ -349,6 +364,7 @@ class SkillListScreen(Screen):
 
         # Update state
         self.installed = get_installed_skills(DESTINATION)
+        debug_log.append(f"Updated installed: {self.installed}")
 
         # Clear selections and refresh display
         try:
@@ -358,8 +374,9 @@ class SkillListScreen(Screen):
                     item.selected = False
                     item.is_installed = item.skill.dir_name in self.installed
                     self._update_item_display(item)
-        except Exception:
-            pass
+                    debug_log.append(f"Updated item {i}: {item.skill.dir_name}")
+        except Exception as e:
+            debug_log.append(f"Exception updating items: {e}")
 
         self.selected_skills.clear()
 
@@ -371,14 +388,21 @@ class SkillListScreen(Screen):
         else:
             msg = f"✓ SUCCESS: Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
 
+        debug_log.append(f"Updating footer with: {msg}")
         footer_left.update(f"[bold green]{msg}[/bold green]")
+        debug_log.append("Footer updated")
 
         # Also update header to show new count
         try:
             header_info = self.query_one("#header-info", Label)
             header_info.update(self._get_header_info())
-        except Exception:
-            pass
+            debug_log.append("Header updated")
+        except Exception as e:
+            debug_log.append(f"Exception updating header: {e}")
+
+        # Write final debug log
+        with open("/tmp/skills_install.log", "w") as f:
+            f.write("\n".join(debug_log))
 
     def _update_item_display(self, item: SkillItem) -> None:
         """Update the display of a skill item"""
