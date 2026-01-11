@@ -39,3 +39,5 @@
 2026-01-10 23:58:38,726 - __main__ - DEBUG - Action: toggle_skill
 2026-01-10 23:58:38,726 - __main__ - INFO - Toggled skill: dispatching-parallel-agents, selected=True
 2026-01-10 23:58:39,813 - __main__ - DEBUG - Key pressed: down
+2026-01-10 23:59:37,677 - __main__ - DEBUG - Key pressed: q
+2026-01-10 23:59:37,677 - __main__ - INFO - Action: quit
