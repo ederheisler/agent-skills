@@ -159,8 +159,8 @@ class SkillItem(ListItem):
             # Single chars get 2 spaces
             marker_col = f"{marker}  "
 
-        # Column 2: Title (25 chars wide)
-        title_col = f"{self.skill.name:<25}"
+        # Column 2: Title (32 chars wide to fit longest name)
+        title_col = f"{self.skill.name:<32}"
 
         # Column 3: Description (starts after title column)
         desc_col = ""
