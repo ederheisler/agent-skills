@@ -570,22 +570,21 @@ class SkillListScreen(Screen):
 
         # Execute operations
         errors = []
-        plugins_processed = False
+        skills_to_install = []
+        skills_to_remove = []
+        plugins_to_install = []
+        plugins_to_remove = []
+
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
             dest_path = DESTINATION / skill_name
-            logger.debug(
-                f"Processing {skill_name}: is_installed={is_installed}, type={type(skill_name)}"
-            )
+            logger.debug(f"Processing {skill_name}: is_installed={is_installed}")
 
             try:
-                logger.info(
-                    f"Skill check: '{skill_name}' == 'superpowers.js'? {skill_name == 'superpowers.js'}"
-                )
                 if skill_name == "superpowers.js":
-                    plugins_processed = True
                     # Handle plugin script specially
                     if is_installed:
+                        plugins_to_remove.append(skill_name)
                         # Remove plugin symlink
                         logger.info(f"Removing plugin {skill_name}")
                         plugin_target = (
@@ -597,13 +596,9 @@ class SkillListScreen(Screen):
                         )
                         if plugin_target.exists():
                             plugin_target.unlink()
-                            logger.info(f"✓ Removed plugin symlink: {plugin_target}")
-                        else:
-                            logger.warning(
-                                f"Plugin symlink not found for removal: {plugin_target}"
-                            )
                         debug_log.append(f"Removed plugin {skill_name}")
                     else:
+                        plugins_to_install.append(skill_name)
                         # Install plugin symlink
                         logger.info(f"Installing plugin {skill_name}")
                         plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
@@ -619,15 +614,15 @@ class SkillListScreen(Screen):
 
                         # Check if source exists
                         if not source.exists():
-                            error_msg = f"Source file not found: {source}. Please install superpowers first."
+                            error_msg = f"Source file not found: {source}. Please ensure superpowers plugin is available."
                             logger.error(f"✗ {error_msg}")
                             self.app.notify(
                                 error_msg,
                                 title="❌ Error",
                                 severity="error",
-                                timeout=6.0,
+                                timeout=4.0,
                             )
-                            return
+                            continue
 
                         # Remove existing if any
                         if target.exists() or target.is_symlink():
@@ -656,51 +651,23 @@ class SkillListScreen(Screen):
                             )
                             success_msg = f"Plugin installed but verification failed"
 
-                        # Show success notification
+                        # Show individual plugin success notification
                         self.app.notify(
                             success_msg,
-                            title="✅ Success",
-                            severity="information",
-                            timeout=6.0,
-                        )
-                        target = plugin_dir / "superpowers.js"
-
-                        # Remove existing if any
-                        if target.exists() or target.is_symlink():
-                            target.unlink()
-
-                        # Create symlink
-                        target.symlink_to(source)
-                        logger.info(
-                            f"✓ Installed plugin {skill_name} -> {target} -> {source}"
-                        )
-                        debug_log.append(f"Installed plugin {skill_name}")
-
-                        # Verify installation
-                        if target.exists() and target.is_symlink():
-                            logger.info(f"✓ Verification: symlink exists and is valid")
-                            success_msg = f"Plugin installed: {target} -> {source}"
-                        else:
-                            logger.error(
-                                f"✗ Verification failed: symlink not created properly"
-                            )
-                            success_msg = f"Plugin installed but verification failed"
-
-                        # Show success notification with details
-                        self.app.notify(
-                            success_msg,
-                            title="✅ Success",
+                            title="✅ Plugin Success",
                             severity="information",
                             timeout=6.0,
                         )
                 else:
                     # Handle regular skills
                     if is_installed:
+                        skills_to_remove.append(skill_name)
                         # Remove
                         logger.info(f"Removing {skill_name}")
                         shutil.rmtree(dest_path)
                         debug_log.append(f"Removed {skill_name}")
                     else:
+                        skills_to_install.append(skill_name)
                         # Install
                         logger.info(f"Installing {skill_name}")
                         source_dir = next(
@@ -752,19 +719,19 @@ class SkillListScreen(Screen):
         self.selected_skills.clear()
         self._update_header()
 
-        # Show success notification (skip if plugins were processed, they show their own notifications)
-        if not plugins_processed:
-            if to_install and to_remove:
-                msg = f"Installed {len(to_install)}, Removed {len(to_remove)}"
-            elif to_install:
-                msg = f"Installed {len(to_install)} skill{'s' if len(to_install) > 1 else ''}"
+        # Show success notification for skills (plugins show their own notifications)
+        if skills_to_install or skills_to_remove:
+            if skills_to_install and skills_to_remove:
+                msg = f"Skills: Installed {len(skills_to_install)}, Removed {len(skills_to_remove)}"
+            elif skills_to_install:
+                msg = f"Skills: Installed {len(skills_to_install)} skill{'s' if len(skills_to_install) > 1 else ''}"
             else:
-                msg = (
-                    f"Removed {len(to_remove)} skill{'s' if len(to_remove) > 1 else ''}"
-                )
+                msg = f"Skills: Removed {len(skills_to_remove)} skill{'s' if len(skills_to_remove) > 1 else ''}"
 
             logger.info(f"Success: {msg}")
-            self.notify(msg, title="✅ Success", severity="information", timeout=6.0)
+            self.notify(
+                msg, title="✅ Skills Success", severity="information", timeout=6.0
+            )
 
         # Also update header to show new count
         try:
