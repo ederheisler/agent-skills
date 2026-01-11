@@ -284,14 +284,14 @@ class InstallScriptModal(Screen):
     """
 
     def compose(self):
-        """Show installation confirmation like description modal"""
+        """Show OpenCode plugin installation confirmation"""
         from textual.widgets import Static, Button
         from textual.containers import Vertical, Center
 
         with Vertical(id="modal-container"):
-            yield Static("Install Installer Script", id="title")
+            yield Static("Install OpenCode Plugin", id="title")
             yield Static(
-                "This will copy the installer script to ~/.Code/.config/opencode/scripts/ for easy access from OpenCode.",
+                "This will create the plugin directory and symlink for OpenCode integration.",
                 id="description",
             )
             with Center():
@@ -314,24 +314,24 @@ class InstallScriptModal(Screen):
         self.app.pop_screen()
 
     def _install_script(self):
-        """Install the script to OpenCode folder"""
+        """Install OpenCode plugin symlink"""
         try:
-            # Destination: OpenCode scripts folder
-            opencode_dir = Path.home() / "Code" / ".config" / "opencode"
-            scripts_dir = opencode_dir / "scripts"
-            scripts_dir.mkdir(parents=True, exist_ok=True)
+            import subprocess
 
-            # Copy install.py
-            source = Path(__file__)
-            dest = scripts_dir / "install_skills.py"
+            # Run the installation commands
+            commands = [
+                "mkdir -p ~/.config/opencode/plugin",
+                "ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js",
+            ]
 
-            import shutil
-
-            shutil.copy2(source, dest)
+            for cmd in commands:
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                if result.returncode != 0:
+                    raise Exception(f"Command failed: {cmd}\n{result.stderr}")
 
             # Show success
             self.app.notify(
-                f"Script installed to {dest}",
+                "OpenCode plugin installed successfully",
                 title="✅ Success",
                 severity="information",
                 timeout=4.0,
@@ -355,7 +355,7 @@ class SkillListScreen(Screen):
         Binding("space", "toggle_skill", "Toggle", show=True),
         Binding("enter", "execute_install", "Apply", show=True),
         Binding("e", "show_description", "Description", show=True),
-        Binding("i", "install_script", "Install Script", show=True),
+        Binding("i", "install_script", "Install Plugin", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
 
@@ -482,7 +482,7 @@ class SkillListScreen(Screen):
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer_left(self) -> str:
-        return "Space: Toggle  Enter: Apply  E: Description  I: Install Script  Q: Quit"
+        return "Space: Toggle  Enter: Apply  E: Description  I: Install Plugin  Q: Quit"
 
     def _get_footer_right(self) -> str:
         return str(DESTINATION)
