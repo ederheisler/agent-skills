@@ -20,17 +20,11 @@ from dataclasses import dataclass
 from textual.app import ComposeResult, App
 from textual.containers import Container, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Static, ListView, ListItem, Label
+from textual.widgets import Static, ListView, ListItem, Label
 from textual.binding import Binding
 
 SKILLS_DIR = Path("skills")
-DEFAULT_BASE_DIR = Path.home() / "Code"
-if not DEFAULT_BASE_DIR.exists():
-    DEFAULT_BASE_DIR = Path.home()
-
-GLOBAL_SKILLS_DIR = DEFAULT_BASE_DIR / ".config" / "opencode" / "skill"
-OPENCODE_SKILLS_DIR = Path.cwd() / ".opencode" / "skill"
-CLAUDE_SKILLS_DIR = Path.cwd() / ".claude" / "skills"
+DESTINATION = Path.cwd() / ".opencode" / "skill"
 
 
 @dataclass
@@ -133,7 +127,7 @@ class SkillItem(ListItem):
 
 
 class SkillListScreen(Screen):
-    """Screen for selecting and installing skills"""
+    """Main screen for selecting and installing skills"""
 
     BINDINGS = [
         Binding("space", "toggle_skill", "Toggle", show=True),
@@ -199,11 +193,10 @@ class SkillListScreen(Screen):
     }
     """
 
-    def __init__(self, destination: Path, available_skills: List[SkillInfo]):
+    def __init__(self):
         super().__init__()
-        self.destination = destination
-        self.available_skills = available_skills
-        self.installed = get_installed_skills(destination)
+        self.available_skills = list_skills()
+        self.installed = get_installed_skills(DESTINATION)
         self.selected_skills: Set[str] = set()
 
     def compose(self) -> ComposeResult:
@@ -222,13 +215,7 @@ class SkillListScreen(Screen):
         yield Static(self._get_footer(), id="footer")
 
     def _get_title(self) -> str:
-        if self.destination == GLOBAL_SKILLS_DIR:
-            return "📦 Global (~/.config/opencode/skill/)"
-        elif self.destination == OPENCODE_SKILLS_DIR:
-            return "📦 OpenCode (.opencode/skill/)"
-        elif self.destination == CLAUDE_SKILLS_DIR:
-            return "📦 Claude (.claude/skills/)"
-        return f"📦 {self.destination}"
+        return "📦 Skills Manager (.opencode/skill/)"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
@@ -265,22 +252,6 @@ class SkillListScreen(Screen):
         except Exception:
             pass
 
-    def _update_item_display(self, item: SkillItem) -> None:
-        """Update the display of a skill item"""
-        checkbox = "✓" if item.selected else " "
-        status = "•" if item.is_installed else " "
-        text = f"[{checkbox}][{status}] {item.skill.name}"
-        if item.skill.description:
-            desc = item.skill.description[:60]
-            if len(item.skill.description) > 60:
-                desc += "…"
-            text += f" — {desc}"
-
-        # Update the label
-        label = item.children[0]
-        if isinstance(label, Label):
-            label.update(text)
-
     def action_clear_selections(self) -> None:
         """Clear all selections"""
         try:
@@ -308,7 +279,7 @@ class SkillListScreen(Screen):
 
         for skill_name in sorted(self.selected_skills):
             is_installed = skill_name in self.installed
-            dest_path = self.destination / skill_name
+            dest_path = DESTINATION / skill_name
 
             try:
                 if is_installed:
@@ -332,7 +303,7 @@ class SkillListScreen(Screen):
                 return
 
         # Update state
-        self.installed = get_installed_skills(self.destination)
+        self.installed = get_installed_skills(DESTINATION)
 
         # Clear selections and refresh display
         for item in list_view.children:
@@ -344,6 +315,22 @@ class SkillListScreen(Screen):
         self.selected_skills.clear()
         footer.update("✓ Done!")
 
+    def _update_item_display(self, item: SkillItem) -> None:
+        """Update the display of a skill item"""
+        checkbox = "✓" if item.selected else " "
+        status = "•" if item.is_installed else " "
+        text = f"[{checkbox}][{status}] {item.skill.name}"
+        if item.skill.description:
+            desc = item.skill.description[:60]
+            if len(item.skill.description) > 60:
+                desc += "…"
+            text += f" — {desc}"
+
+        # Update the label
+        label = item.children[0]
+        if isinstance(label, Label):
+            label.update(text)
+
     def _update_footer(self) -> None:
         """Update the footer message"""
         try:
@@ -351,82 +338,6 @@ class SkillListScreen(Screen):
             footer.update(self._get_footer())
         except Exception:
             pass
-
-    def action_quit(self) -> None:
-        self.app.exit()
-
-
-class DestinationScreen(Screen):
-    """Screen for selecting destination"""
-
-    BINDINGS = [Binding("q", "quit", "Quit")]
-
-    CSS = """
-    DestinationScreen {
-        layout: vertical;
-        align: center middle;
-        background: $surface;
-    }
-
-    #container {
-        width: 60;
-        height: auto;
-        border: solid $primary;
-        background: $boost;
-        padding: 2;
-    }
-
-    #title {
-        height: 1;
-        text-align: center;
-        text-style: bold;
-        margin-bottom: 2;
-        color: $text;
-    }
-
-    Button {
-        margin: 0 0 1 0;
-        width: 100%;
-    }
-
-    Button:focus {
-        background: $primary;
-    }
-    """
-
-    def compose(self) -> ComposeResult:
-        with Container(id="container"):
-            yield Label("📦 Select Installation Destination", id="title")
-
-            with Vertical():
-                yield Button(
-                    "Global (~/.config/opencode/skill/)",
-                    id="btn-global",
-                    variant="primary",
-                )
-                yield Button(
-                    "OpenCode (.opencode/skill/)", id="btn-opencode", variant="primary"
-                )
-                yield Button(
-                    "Claude (.claude/skills/)", id="btn-claude", variant="primary"
-                )
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        destinations = {
-            "btn-global": GLOBAL_SKILLS_DIR,
-            "btn-opencode": OPENCODE_SKILLS_DIR,
-            "btn-claude": CLAUDE_SKILLS_DIR,
-        }
-
-        if event.button.id in destinations:
-            destination = destinations[event.button.id]
-            skills = list_skills()
-
-            if not skills:
-                self.app.exit("No skills found")
-                return
-
-            self.app.push_screen(SkillListScreen(destination, skills))
 
     def action_quit(self) -> None:
         self.app.exit()
@@ -444,7 +355,7 @@ class InstallerApp(App):
     """
 
     def on_mount(self) -> None:
-        self.push_screen(DestinationScreen())
+        self.push_screen(SkillListScreen())
 
 
 if __name__ == "__main__":
