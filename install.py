@@ -191,12 +191,12 @@ class SkillListScreen(Screen):
     }
 
     #footer {
-        height: 2;
+        height: auto;
         background: $secondary;
         color: $text;
         border-top: heavy $accent;
-        padding: 0 1;
-        content-align: center middle;
+        padding: 1;
+        content-align: left top;
     }
     """
 
@@ -222,18 +222,18 @@ class SkillListScreen(Screen):
         yield Static(self._get_footer(), id="footer")
 
     def _get_title(self) -> str:
-        return f"📦 Skills Manager ({DESTINATION})"
+        return f"📦 Skills Manager"
 
     def _get_header_info(self) -> str:
         return f"Available: {len(self.available_skills)} | Installed: {len(self.installed)}"
 
     def _get_footer(self) -> str:
         if not self.selected_skills:
-            return "Space: toggle | Enter: apply | Esc: clear | Q: quit"
+            return f"Destination: {DESTINATION}\n[Space] Toggle  [Enter] Apply  [Esc] Clear  [Q] Quit"
 
         install = len([s for s in self.selected_skills if s not in self.installed])
         remove = len([s for s in self.selected_skills if s in self.installed])
-        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove}) | Enter: apply"
+        return f"Selected: {len(self.selected_skills)} (install: {install}, remove: {remove})\nDestination: {DESTINATION}\n[Enter] Apply changes  [Esc] Clear selection  [Q] Quit"
 
     def action_toggle_skill(self) -> None:
         """Toggle the selected skill"""
