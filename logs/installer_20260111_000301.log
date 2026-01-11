@@ -1,0 +1,30 @@
+2026-01-11 00:03:01,936 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-01-11 00:03:01,941 - __main__ - INFO - === InstallerApp mounted ===
+2026-01-11 00:03:01,941 - __main__ - INFO - === SkillListScreen initialized ===
+2026-01-11 00:03:01,945 - __main__ - INFO - Available skills: 27
+2026-01-11 00:03:01,945 - __main__ - INFO - Installed skills: {'canvas-design', 'brainstorming', 'quality-gates'}
+2026-01-11 00:03:01,945 - __main__ - INFO - Destination: /Users/eder/Code/.config/opencode/skill
+2026-01-11 00:03:02,951 - __main__ - DEBUG - Key pressed: down
+2026-01-11 00:03:03,315 - __main__ - DEBUG - Key pressed: down
+2026-01-11 00:03:03,776 - __main__ - DEBUG - Key pressed: up
+2026-01-11 00:03:03,941 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:03,941 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:03,941 - __main__ - INFO - Toggled skill: brainstorming, selected=True
+2026-01-11 00:03:04,587 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:04,587 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:04,587 - __main__ - INFO - Toggled skill: brainstorming, selected=False
+2026-01-11 00:03:04,873 - __main__ - DEBUG - Key pressed: up
+2026-01-11 00:03:04,993 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:04,994 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:04,994 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=True
+2026-01-11 00:03:05,338 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:05,338 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:05,338 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=False
+2026-01-11 00:03:05,743 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:05,744 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:05,744 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=True
+2026-01-11 00:03:06,134 - __main__ - DEBUG - Key pressed: space
+2026-01-11 00:03:06,134 - __main__ - DEBUG - Action: toggle_skill
+2026-01-11 00:03:06,134 - __main__ - INFO - Toggled skill: skill-creator-anthropic, selected=False
+2026-01-11 00:03:07,484 - __main__ - DEBUG - Key pressed: q
+2026-01-11 00:03:07,484 - __main__ - INFO - Action: quit

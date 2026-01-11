@@ -154,12 +154,9 @@ class SkillItem(ListItem):
         # Title with fixed spacing after marker
         title = f"{marker} {self.skill.name}"
 
-        # Description
+        # Description (full length)
         if self.skill.description:
-            desc = self.skill.description[:60]
-            if len(self.skill.description) > 60:
-                desc += "…"
-            title += f" — {desc}"
+            title += f" — {self.skill.description}"
 
         return title
 
