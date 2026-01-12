@@ -52,11 +52,18 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 
 ## Coverage Strategy
 
+- Coverage is opt-in: never run coverage unless explicitly requested by the user in the current session (e.g., "improve coverage on file X to Y%"). PM/teammate/CI pressure does not override this rule.
 - Pyramid discipline: many unit tests, fewer integration, very few E2E. Use E2E to prove cross-service flow or UI contract.
 - Change-based coverage: every test should fail without the code change and pass with it; capture the regression input/output.
 - Critical paths first: auth, billing, migrations, data loss, irreversible actions. Add invariants that must never be violated.
 - Data and time: cover time zones, DST, leap years, ordering, pagination, idempotency, and retry semantics.
 - Observability: log seeds for randomized tests; emit diagnostics on failure (inputs, seed, environment versions).
+
+**Example (explicit coverage request):** User: "improve coverage on file X to 80%". Run targeted coverage for that file only, add behavior-driven tests to hit missing branches, and avoid coverage runs outside that request.
+
+```bash
+pytest --cov=path/to/file.py --cov-report=term-missing
+```
 
 ## Flake Prevention
 
@@ -97,6 +104,7 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 - Sleep-based waits; reliance on wall-clock time; unseeded randomness.
 - Combined scenarios covering multiple behaviors in one test; global fixtures that hide setup.
 - Golden files updated blindly; tests that assert logging implementation rather than outcomes.
+- Running coverage by default instead of waiting for explicit coverage requests.
 
 ## Red Flags - Stop and Fix
 
@@ -105,3 +113,5 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 - Unseeded randomness, sleeps instead of explicit waits, or shared mutable fixtures
 - Golden updates accepted without review of intent
 - A test never failed before the code change
+- Running coverage without the user explicitly asking
+- Running coverage due to PM/teammate/CI pressure

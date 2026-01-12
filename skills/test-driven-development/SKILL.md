@@ -124,6 +124,8 @@ Vague name, tests mock not code
 
 **MANDATORY. Never skip.**
 
+Run tests without coverage unless the user explicitly requests coverage tasks; coverage output pollutes context. PM/teammate/CI pressure does not override this rule.
+
 ```bash
 npm test path/to/test.test.ts
 ```
@@ -285,6 +287,8 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
 | "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
+| "Coverage is always safer" | Coverage is opt-in; run it only when explicitly requested. |
+| "PM/teammate/CI needs coverage" | Only explicit user request triggers coverage runs. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
 ## Red Flags - STOP and Start Over
@@ -302,6 +306,8 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 - "Already spent X hours, deleting is wasteful"
 - "TDD is dogmatic, I'm being pragmatic"
 - "This is different because..."
+- "I'll run coverage just in case"
+- "PM/teammate/CI asked for coverage"
 
 **All of these mean: Delete code. Start over with TDD.**
 
@@ -355,6 +361,7 @@ Before marking work complete:
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
 - [ ] All tests pass
+- [ ] Coverage only run when explicitly requested
 - [ ] Output pristine (no errors, warnings)
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered

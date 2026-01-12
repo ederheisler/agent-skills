@@ -11,7 +11,7 @@ metadata:
 
 ## Overview
 
-Project-agnostic bash script enforcing Python code quality gates using ruff, pyrefly, radon, hypothesis, pytest, and markdownlint. Three execution modes provide flexibility for different workflows: unit-tests for fast feedback, all-tests for comprehensive pre-merge validation, no-tests for static analysis only.
+Project-agnostic bash script enforcing Python code quality gates using ruff, pyrefly, radon, hypothesis, pytest, and markdownlint. Three execution modes provide flexibility for different workflows: unit-tests for fast feedback, all-tests for comprehensive pre-merge validation, no-tests for static analysis only. Coverage runs are excluded by default; run coverage only when the user explicitly requests it.
 
 ## When to Use
 
@@ -55,6 +55,7 @@ Make sure uv is installed.
 | "Time-critical, skip checks" | Use no-tests mode for fast static validation                         |
 | "Already tested manually"    | Automation catches edge cases manual testing misses                  |
 | "Partial checks sufficient"  | Modes provide full coverage options; incomplete coverage misses bugs |
+| "Coverage by default"        | Coverage pollutes context; run it only when explicitly requested     |
 | "Too slow"                   | Tools are fast; skipping misses complexity and type issues           |
 | "Script not in project"      | Copy to project to .claude/; run locally                             |
 | "Tools not installed"        | Install uv; graceful fallbacks skip missing tools                    |
@@ -67,5 +68,6 @@ Stop and re-evaluate if you're:
 - "This time is different"
 - "Good enough for now"
 - Rationalizing under deadline pressure
+- Adding coverage without an explicit request
 
 All of these suggest running the script with the appropriate mode.
