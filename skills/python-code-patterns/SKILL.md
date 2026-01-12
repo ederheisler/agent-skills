@@ -1,9 +1,9 @@
 ---
 name: python-code-patterns
-description: Python code style and type hinting patterns. Use when writing or reviewing Python code to ensure consistent, modern type annotations and clean code structure. Covers modern type hints, import organization, comment practices, and docstring conventions.
+description: Python code style and type hinting patterns. Use when writing or reviewing Python code to ensure consistent, modern type annotations, clean code structure, and proper separation of concerns. Covers modern type hints, import organization, router-service separation, comment practices, and docstring conventions.
 metadata:
   author: eder
-  version: "1.0"
+  version: "1.2"
 ---
 
 # Python Code Patterns
@@ -97,6 +97,60 @@ for item in items:
 
 Comments should explain **why**, not **what**.
 
+## Router-Service Separation
+
+Keep routers free of business logic:
+
+**DO:**
+
+```python
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/items/{item_id}")
+async def get_item(item_id: int):
+    return await service.get_item(item_id)
+```
+
+**DON'T:**
+
+```python
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/items/{item_id}")
+async def get_item(item_id: int):
+    if item_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid item ID")
+    
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return item
+```
+
+- Routers should only call service functions and return results
+- Validation, checks, business logic belong in the service layer
+- Services raise HTTPExceptions directly - let them bubble up through routers
+- Services contain domain logic and return domain objects or primitives
+
+**Service layer handles:**
+
+- Input validation and sanitization
+- Business rules and constraints
+- Database operations and queries
+- Error conditions and exceptions raising
+
+**Router layer handles:**
+
+- HTTP method routing
+- Delegating to service functions
+- Returning service results directly
+- No business logic or validation
+
 ## Docstrings
 
 Keep docstrings concise and focused:
@@ -139,3 +193,4 @@ Apply these patterns whenever:
 - Reviewing or refactoring existing Python code (outside tests/)
 - Updating type annotations (outside tests/)
 - Adding or modifying imports (outside tests/)
+- Implementing API routers or service layer functions
