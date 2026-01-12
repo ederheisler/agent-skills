@@ -48,7 +48,7 @@ You should see superpowers is active when you ask "do you have superpowers?"
 
 Use the `find_skills` tool to list all available skills:
 
-```
+```text
 use find_skills tool
 ```
 
@@ -56,7 +56,7 @@ use find_skills tool
 
 Use the `use_skill` tool to load a specific skill:
 
-```
+```text
 use use_skill tool with skill_name: "superpowers:brainstorming"
 ```
 
@@ -108,6 +108,7 @@ description: Use when [condition] - [what it does]
 **Skill Priority:** Project skills override personal skills, which override superpowers skills.
 
 **Skill Naming:**
+
 - `project:skill-name` - Force project skill lookup (checks .opencode/skill/ and .claude/skills/)
 - `skill-name` - Searches project → personal → superpowers
 - `superpowers:skill-name` - Force superpowers skill lookup
@@ -152,6 +153,7 @@ git pull
 ### Tool mapping issues
 
 When a skill references a Claude Code tool you don't have:
+
 - `TodoWrite` → use `update_plan`
 - `Task` with subagents → use `@mention` syntax to invoke OpenCode subagents
 - `Skill` → use `use_skill` tool
@@ -160,10 +162,12 @@ When a skill references a Claude Code tool you don't have:
 ### Wrong skills path
 
 If the plugin can't find the skills directory:
+
 1. Verify the symlink points to the correct `superpowers.js` file
 2. Check that the skills directory is at the correct relative path from the plugin
 3. For local setups, ensure your directory structure is:
-   ```
+
+   ```text
    /path/to/skills/
    ├── .opencode/
    │   └── plugin/
@@ -178,5 +182,5 @@ If the plugin can't find the skills directory:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Documentation: https://github.com/obra/superpowers
+- Report issues: <https://github.com/obra/superpowers/issues>
+- Documentation: <https://github.com/obra/superpowers>

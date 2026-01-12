@@ -1,6 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch, Mock
-import shutil
+from unittest.mock import patch
 
 import pytest
 
