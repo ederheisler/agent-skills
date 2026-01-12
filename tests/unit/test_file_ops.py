@@ -1,5 +1,6 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+import shutil
 
 import pytest
 
@@ -185,3 +186,130 @@ def test_get_installed_skills_includes_plugins(mock_dest_dir):
         result = skills.get_installed_skills(mock_dest_dir)
 
     assert "my-plugin" in result
+
+
+# --- Error handling tests ---
+
+
+def test_install_skill_returns_false_on_permission_error(tmp_path, mock_dest_dir):
+    """Test install_skill returns False when permission denied"""
+    # Arrange
+    source = tmp_path / "source_skill"
+    source.mkdir()
+    (source / "file.txt").write_text("content")
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=source,
+        dir_name="test_skill",
+    )
+
+    # Act - Mock copytree to raise PermissionError
+    with patch("shutil.copytree", side_effect=PermissionError("Access denied")):
+        result = skills.install_skill(skill, mock_dest_dir)
+
+    # Assert
+    assert result is False
+
+
+def test_install_skill_returns_false_on_io_error(tmp_path, mock_dest_dir):
+    """Test install_skill returns False on I/O errors"""
+    # Arrange
+    source = tmp_path / "source_skill"
+    source.mkdir()
+    (source / "file.txt").write_text("content")
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=source,
+        dir_name="test_skill",
+    )
+
+    # Act - Mock copytree to raise OSError (disk full, etc.)
+    with patch("shutil.copytree", side_effect=OSError("Disk full")):
+        result = skills.install_skill(skill, mock_dest_dir)
+
+    # Assert
+    assert result is False
+
+
+def test_remove_skill_returns_false_on_permission_error(mock_dest_dir):
+    """Test remove_skill returns False when permission denied"""
+    # Arrange
+    target = mock_dest_dir / "to_remove"
+    target.mkdir()
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=Path("irrelevant"),
+        dir_name="to_remove",
+    )
+
+    # Act - Mock rmtree to raise PermissionError
+    with patch("shutil.rmtree", side_effect=PermissionError("Access denied")):
+        result = skills.remove_skill(skill, mock_dest_dir)
+
+    # Assert
+    assert result is False
+
+
+def test_remove_skill_returns_false_on_io_error(mock_dest_dir):
+    """Test remove_skill returns False on I/O errors"""
+    # Arrange
+    target = mock_dest_dir / "to_remove"
+    target.mkdir()
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=Path("irrelevant"),
+        dir_name="to_remove",
+    )
+
+    # Act - Mock rmtree to raise OSError
+    with patch("shutil.rmtree", side_effect=OSError("I/O error")):
+        result = skills.remove_skill(skill, mock_dest_dir)
+
+    # Assert
+    assert result is False
+
+
+def test_install_skill_does_not_catch_keyboard_interrupt(tmp_path, mock_dest_dir):
+    """Test install_skill allows KeyboardInterrupt to propagate"""
+    # Arrange
+    source = tmp_path / "source_skill"
+    source.mkdir()
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=source,
+        dir_name="test_skill",
+    )
+
+    # Act & Assert - KeyboardInterrupt should propagate
+    with patch("shutil.copytree", side_effect=KeyboardInterrupt()):
+        with pytest.raises(KeyboardInterrupt):
+            skills.install_skill(skill, mock_dest_dir)
+
+
+def test_remove_skill_does_not_catch_keyboard_interrupt(mock_dest_dir):
+    """Test remove_skill allows KeyboardInterrupt to propagate"""
+    # Arrange
+    target = mock_dest_dir / "to_remove"
+    target.mkdir()
+
+    skill = models.SkillInfo(
+        name="Test Skill",
+        description="Test",
+        path=Path("irrelevant"),
+        dir_name="to_remove",
+    )
+
+    # Act & Assert - KeyboardInterrupt should propagate
+    with patch("shutil.rmtree", side_effect=KeyboardInterrupt()):
+        with pytest.raises(KeyboardInterrupt):
+            skills.remove_skill(skill, mock_dest_dir)

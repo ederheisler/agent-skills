@@ -401,6 +401,37 @@ class SkillListScreen(Screen):
             None,
         )
 
+    def _reinstall_skill(self, skill: SkillInfo) -> tuple[bool, str | None]:
+        """Reinstall a single skill. Returns (success, error_message)"""
+        try:
+            if skill.is_plugin:
+                logger.info(f"Reinstalling plugin {skill.name}")
+                plugin.remove_plugin(skill)  # type: ignore[arg-type]
+                plugin.install_plugin(skill)  # type: ignore[arg-type]
+                return True, None
+            else:
+                logger.info(f"Reinstalling skill {skill.name}")
+                if install_skill(skill, self.destination):
+                    return True, None
+                return False, "installation failed"
+        except Exception as e:
+            logger.error(f"Failed to update {skill.name}: {e}")
+            return False, str(e)
+
+    def _format_reinstall_success_message(
+        self, skill_count: int, plugin_count: int
+    ) -> str:
+        """Format success message for reinstall operation"""
+        parts = []
+        if skill_count > 0:
+            parts.append(f"{skill_count} skill{'s' if skill_count != 1 else ''}")
+        if plugin_count > 0:
+            parts.append(f"{plugin_count} plugin{'s' if plugin_count != 1 else ''}")
+
+        if parts:
+            return f"Successfully updated {' + '.join(parts)}"
+        return "No updates needed (or installed items not found in source)"
+
     def action_reinstall_all(self) -> None:
         """Reinstall all installed skills immediately"""
         logger.info("Action: reinstall_all - reinstalling all installed skills")
@@ -408,16 +439,11 @@ class SkillListScreen(Screen):
         # Refresh installed list first
         self.installed = get_installed_skills(self.destination)
 
-        installed_names = self.installed
-        if not installed_names:
+        if not self.installed:
             self.notify("No installed skills to update", severity="warning")
             return
 
-        self.notify(
-            "Updating...",
-            title="Update Started",
-            severity="information",
-        )
+        self.notify("Updating...", title="Update Started", severity="information")
 
         errors = []
         skill_success_count = 0
@@ -425,22 +451,15 @@ class SkillListScreen(Screen):
 
         # Iterate over all available skills to find the ones that are installed
         for skill in self.available_skills:
-            if skill.dir_name in installed_names:
-                try:
+            if skill.dir_name in self.installed:
+                success, error = self._reinstall_skill(skill)
+                if success:
                     if skill.is_plugin:
-                        logger.info(f"Reinstalling plugin {skill.name}")
-                        plugin.remove_plugin(skill)  # type: ignore[arg-type]
-                        plugin.install_plugin(skill)  # type: ignore[arg-type]
                         plugin_success_count += 1
                     else:
-                        logger.info(f"Reinstalling skill {skill.name}")
-                        if install_skill(skill, self.destination):
-                            skill_success_count += 1
-                        else:
-                            errors.append(f"{skill.name}: installation failed")
-                except Exception as e:
-                    logger.error(f"Failed to update {skill.name}: {e}")
-                    errors.append(f"{skill.name}: {e}")
+                        skill_success_count += 1
+                else:
+                    errors.append(f"{skill.name}: {error}")
 
         # Refresh state
         self.refresh_installed_status()
@@ -457,25 +476,11 @@ class SkillListScreen(Screen):
                 timeout=10.0,
             )
         else:
-            parts = []
-            if skill_success_count > 0:
-                parts.append(
-                    f"{skill_success_count} skill{'s' if skill_success_count != 1 else ''}"
-                )
-            if plugin_success_count > 0:
-                parts.append(
-                    f"{plugin_success_count} plugin{'s' if plugin_success_count != 1 else ''}"
-                )
-            msg = (
-                f"Successfully updated {' + '.join(parts)}"
-                if parts
-                else "No updates needed (or installed items not found in source)"
+            msg = self._format_reinstall_success_message(
+                skill_success_count, plugin_success_count
             )
             self.notify(
-                msg,
-                title="Update Complete",
-                severity="information",
-                timeout=3.0,
+                msg, title="Update Complete", severity="information", timeout=3.0
             )
 
     def action_toggle_skill(self) -> None:
@@ -519,6 +524,34 @@ class SkillListScreen(Screen):
         except Exception as e:
             logger.error(f"Error updating UI: {e}", exc_info=True)
 
+    def _process_skill_operation(
+        self, skill: SkillInfo, should_remove: bool
+    ) -> tuple[bool, str | None]:
+        """Process install or remove operation. Returns (success, error_message)"""
+        try:
+            if skill.is_plugin:
+                if should_remove:
+                    logger.info(f"Removing plugin {skill.name}")
+                    plugin.remove_plugin(skill)  # type: ignore[arg-type]
+                else:
+                    logger.info(f"Installing plugin {skill.name}")
+                    plugin.install_plugin(skill)  # type: ignore[arg-type]
+                return True, None
+            else:
+                if should_remove:
+                    logger.info(f"Removing skill {skill.name}")
+                    if remove_skill(skill, self.destination):
+                        return True, None
+                    return False, "delete failed"
+                else:
+                    logger.info(f"Installing skill {skill.name}")
+                    if install_skill(skill, self.destination):
+                        return True, None
+                    return False, "install failed"
+        except Exception as e:
+            logger.error(f"Error processing {skill.name}: {e}")
+            return False, str(e)
+
     def action_execute_install(self) -> None:
         """Execute the installation/removal of selected skills"""
         logger.info(f"Action: execute_install, selected={self.selected_skills}")
@@ -545,36 +578,13 @@ class SkillListScreen(Screen):
 
             is_installed = skill_dir_name in self.installed
             is_reinstall = skill_dir_name in self.reinstall_mode
-
             should_remove = is_installed and not is_reinstall
 
-            try:
-                if skill.is_plugin:
-                    if should_remove:
-                        logger.info(f"Removing plugin {skill.name}")
-                        plugin.remove_plugin(skill)  # type: ignore[arg-type]
-                        success_count += 1
-                    else:
-                        logger.info(f"Installing plugin {skill.name}")
-                        plugin.install_plugin(skill)  # type: ignore[arg-type]
-                        success_count += 1
-                else:
-                    if should_remove:
-                        logger.info(f"Removing skill {skill.name}")
-                        if remove_skill(skill, self.destination):
-                            success_count += 1
-                        else:
-                            errors.append(f"{skill.name}: delete failed")
-                    else:
-                        logger.info(f"Installing skill {skill.name}")
-                        if install_skill(skill, self.destination):
-                            success_count += 1
-                        else:
-                            errors.append(f"{skill.name}: install failed")
-
-            except Exception as e:
-                logger.error(f"Error processing {skill.name}: {e}")
-                errors.append(f"{skill.name}: {e}")
+            success, error = self._process_skill_operation(skill, should_remove)
+            if success:
+                success_count += 1
+            else:
+                errors.append(f"{skill.name}: {error}")
 
         # Update UI
         self.refresh_installed_status()
@@ -630,7 +640,7 @@ class SkillListScreen(Screen):
         # Start from the parent of the current destination if it exists
         # Otherwise fall back to ~/Code or ~
         if self.destination.exists():
-            # Go up from ~/.claude/skills to the project root
+            # Go up from destination (e.g. ~/.claude/skills or .opencode/skill) to the project root
             start_dir = self.destination.parent.parent
             logger.info(
                 f"Starting from current destination's project root: {start_dir}"

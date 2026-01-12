@@ -77,7 +77,7 @@ def install_skill(skill: SkillInfo, destination: Path) -> bool:
         shutil.copytree(skill.path, dest_path)
         logger.info(f"✓ Installed {skill.name}")
         return True
-    except Exception as e:
+    except (OSError, PermissionError, shutil.Error) as e:
         logger.error(f"Failed to install {skill.name}: {e}")
         return False
 
@@ -91,6 +91,6 @@ def remove_skill(skill: SkillInfo, destination: Path) -> bool:
             logger.info(f"✓ Removed {skill.name}")
             return True
         return False
-    except Exception as e:
+    except (OSError, PermissionError, shutil.Error) as e:
         logger.error(f"Failed to remove {skill.name}: {e}")
         return False
