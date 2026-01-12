@@ -4,7 +4,8 @@ description: Guide for creating effective skills. This skill should be used when
 license: Complete terms in LICENSE.txt
 metadata:
   author: anthropic
-  version: "1.0"
+  version: "1.1"
+  co-author: eder
 ---
 
 # Skill Creator
@@ -306,21 +307,52 @@ Any example files and directories not needed for the skill should be deleted. Th
 
 ##### Frontmatter
 
-Write the YAML frontmatter with `name` and `description`:
+Write the YAML frontmatter with the following fields. Ensure all constraints are met.
 
-- `name`: The skill name
+| Field | Required | Constraints |
+| :--- | :--- | :--- |
+| `name` | Yes | Max 64 characters. Lowercase letters, numbers, and hyphens only. Must not start or end with a hyphen. |
+| `description` | Yes | Max 1024 characters. Non-empty. Describes what the skill does and when to use it. |
+| `license` | No | License name or reference to a bundled license file. |
+| `compatibility` | No | Max 500 characters. Indicates environment requirements (intended product, system packages, network access, etc.). |
+| `metadata` | No | Arbitrary key-value mapping for additional metadata. |
+| `allowed-tools` | No | Space-delimited list of pre-approved tools the skill may use. (Experimental) |
+
+**Details:**
+
+- `name`: The skill name.
 - `description`: This is the primary triggering mechanism for your skill, and helps the agent understand when to use the skill.
   - Include both what the Skill does and specific triggers/contexts for when to use it.
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to the agent.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when the agent needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
-
-Do not include any other fields in YAML frontmatter.
+- `metadata`: We require this field to contain authorship and versioning information.
+  - `author`: The original creator of the skill.
+  - `version`: The version string (e.g. "1.0"). Increment this each iteration.
+  - `co-author`: (Optional) Add your name here if you are updating an existing skill.
 
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
 
-### Step 5: Packaging a Skill
+### Step 5: Validation
+
+Before packaging, you must validate the skill to ensure it meets quality standards.
+
+**Obligatory Quality Gate:**
+
+Validate the skill after creating or updating it:
+
+```bash
+uvx --from skills-ref agentskills validate path_to_SKILL.md
+```
+
+Example:
+
+```bash
+uvx --from skills-ref agentskills validate skills/quality-gates/SKILL.md
+```
+
+### Step 6: Packaging a Skill
 
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 
@@ -347,7 +379,7 @@ The packaging script will:
 
 If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
 
-### Step 6: Iterate
+### Step 7: Iterate
 
 After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
 

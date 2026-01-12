@@ -3,7 +3,8 @@ name: writing-skills
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 metadata:
   author: obra
-  version: "1.0"
+  version: "1.1"
+  co-author: eder
 ---
 
 # Writing Skills
@@ -661,9 +662,10 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **GREEN Phase - Write Minimal Skill:**
 
-- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
-- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
+- [ ] **Name:** Max 64 chars. Lowercase letters, numbers, and hyphens only. Must not start/end with hyphen.
+- [ ] **Description:** Max 1024 chars. Non-empty. Starts with "Use when..." and includes triggers/symptoms.
+- [ ] **Metadata:** YAML frontmatter must include `metadata` block with `author` and `version`.
+- [ ] **Optional fields:** Ensure `license`, `compatibility`, `allowed-tools` (if used) meet spec constraints.
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
 - [ ] Clear overview with core principle
@@ -687,6 +689,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Common mistakes section
 - [ ] No narrative storytelling
 - [ ] Supporting files only for tools or heavy reference
+- [ ] **OBLIGATORY:** Validate skill with `uvx --from skills-ref agentskills validate path_to_SKILL.md`
 
 **Deployment:**
 
