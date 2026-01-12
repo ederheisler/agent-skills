@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/eder/Code/skills/install.py", line 22, in <module>
-    from textual.app import ComposeResult, App
-ModuleNotFoundError: No module named 'textual'

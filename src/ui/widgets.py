@@ -1,4 +1,5 @@
 """UI widgets for skills manager"""
+
 import logging
 
 from textual.binding import Binding
@@ -33,9 +34,9 @@ class SkillItem(ListItem):
         if self.selected:
             if self.is_installed:
                 if self.is_reinstall:
-                    marker = "[yellow]o[/yellow][green]↻[/green]"
+                    marker = "[green]↻[/green]"
                 else:
-                    marker = "[yellow]o[/yellow][red]✖[/red]"
+                    marker = "[red]✖[/red]"
             else:
                 marker = "[white]✓[/white]"
         else:
@@ -44,7 +45,7 @@ class SkillItem(ListItem):
             else:
                 marker = " "
 
-        if self.selected and self.is_installed:
+        if self.selected:
             marker_col = f"{marker} "
         else:
             marker_col = f"{marker}  "
@@ -107,7 +108,9 @@ class DescriptionModal(Screen):
         """Show skill title and full description in centered modal"""
         with Vertical(id="modal-container"):
             yield Label(f"[bold]{self.skill.name}[/bold]", id="title")
-            yield Static(self.skill.description or "No description available", id="description")
+            yield Static(
+                self.skill.description or "No description available", id="description"
+            )
             with Center():
                 yield Button("Close (e)", id="close_btn", variant="primary")
 

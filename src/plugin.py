@@ -1,4 +1,5 @@
 """Plugin installation and management"""
+
 import logging
 import shutil
 from pathlib import Path
@@ -23,14 +24,16 @@ def load_plugins() -> List[SkillInfo]:
                 # Fallback to dir name if README doesn't exist or is empty
                 name_from_fm, description = load_frontmatter(readme)
                 name = name_from_fm or p_dir.name
-                
-                plugins.append(SkillInfo(
-                    name=name,
-                    description=description,
-                    path=p_dir,
-                    dir_name=p_dir.name,
-                    type="plugin"
-                ))
+
+                plugins.append(
+                    SkillInfo(
+                        name=name,
+                        description=description,
+                        path=p_dir,
+                        dir_name=p_dir.name,
+                        type="plugin",
+                    )
+                )
     return plugins
 
 
@@ -42,8 +45,8 @@ def remove_plugin(plugin: SkillInfo) -> None:
     if not main_js_files:
         logger.warning(f"No JS file found in {src_plugin_dir}")
         return
-        
-    plugin_name = main_js_files[0].name # e.g. superpowers.js
+
+    plugin_name = main_js_files[0].name  # e.g. superpowers.js
 
     # Symlink location
     plugin_target = Path.home() / ".config" / "opencode" / "plugin" / plugin_name
@@ -54,11 +57,11 @@ def remove_plugin(plugin: SkillInfo) -> None:
     # User copy location
     user_superpowers = Path.home() / ".config" / "opencode" / "superpowers"
     user_plugin_path = user_superpowers / ".opencode" / "plugin" / plugin_name
-    
+
     if user_plugin_path.exists():
         user_plugin_path.unlink()
         logger.info(f"✓ Removed copied plugin: {user_plugin_path}")
-        
+
     # Remove lib files if any
     src_lib_dir = plugin.path / "lib"
     if src_lib_dir.exists():
@@ -78,7 +81,7 @@ def install_plugin(plugin: SkillInfo) -> None:
     main_js_files = list(src_plugin_dir.glob("*.js"))
     if not main_js_files:
         raise FileNotFoundError(f"No JS file found in {src_plugin_dir}")
-    
+
     main_js_file = main_js_files[0]
     plugin_name = main_js_file.name
 
@@ -114,21 +117,21 @@ def get_installed_plugins() -> List[str]:
     plugin_dir = Path.home() / ".config" / "opencode" / "plugin"
     if plugin_dir.exists():
         for item in plugin_dir.iterdir():
-            # If it's a symlink or file, we count it. 
-            # We compare against the 'dir_name' of the skill? 
+            # If it's a symlink or file, we count it.
+            # We compare against the 'dir_name' of the skill?
             # No, 'dir_name' of the skill is the folder name in repo (e.g. 'superpowers').
             # The plugin name is 'superpowers.js'.
             # This mismatch is annoying.
             # load_plugins uses 'p_dir.name' as 'dir_name'.
             # load_plugins uses 'name' from frontmatter or 'p_dir.name'.
-            
+
             # Helper: We need to map installed .js files back to plugin directory names if possible,
             # or just assume the plugin directory name matches the js file name without .js?
             # In 'superpowers' folder, the js file is 'plugin/superpowers.js'.
             # So if we see 'superpowers.js' in config dir, it corresponds to 'superpowers' skill.
-            
+
             # Let's assume the plugin dir name is the stem of the js file?
             if item.suffix == ".js":
-                installed.append(item.stem) # 'superpowers'
-                
+                installed.append(item.stem)  # 'superpowers'
+
     return installed

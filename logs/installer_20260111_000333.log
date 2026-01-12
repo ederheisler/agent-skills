@@ -1,8 +1,0 @@
-2026-01-11 00:03:33,480 - asyncio - DEBUG - Using selector: KqueueSelector
-2026-01-11 00:03:33,484 - __main__ - INFO - === InstallerApp mounted ===
-2026-01-11 00:03:33,484 - __main__ - INFO - === SkillListScreen initialized ===
-2026-01-11 00:03:33,488 - __main__ - INFO - Available skills: 27
-2026-01-11 00:03:33,488 - __main__ - INFO - Installed skills: {'quality-gates', 'canvas-design', 'brainstorming'}
-2026-01-11 00:03:33,488 - __main__ - INFO - Destination: /Users/eder/Code/.config/opencode/skill
-2026-01-11 00:03:35,503 - __main__ - DEBUG - Key pressed: q
-2026-01-11 00:03:35,503 - __main__ - INFO - Action: quit

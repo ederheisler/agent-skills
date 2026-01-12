@@ -1,10 +1,10 @@
 """Skills listing and management"""
+
 import logging
 import shutil
 from pathlib import Path
 from typing import List, Set
 
-from .config import SKILLS_DIR
 from .models import SkillInfo
 from .plugin import get_installed_plugins, load_plugins
 from .utils import load_frontmatter
@@ -17,7 +17,7 @@ def get_skill_info(skill_dir: Path) -> SkillInfo:
     skill_file = skill_dir / "SKILL.md"
     name = skill_dir.name
     description = ""
-    
+
     if skill_file.exists():
         name_fm, desc_fm = load_frontmatter(skill_file)
         name = name_fm or name
@@ -31,7 +31,7 @@ def get_skill_info(skill_dir: Path) -> SkillInfo:
     )
 
 
-def load_skills() -> List[SkillInfo]:
+def load_skills(skills_dir: Path) -> List[SkillInfo]:
     """List all available skills, sorted by name, with plugins first"""
     skills = []
 
@@ -45,8 +45,8 @@ def load_skills() -> List[SkillInfo]:
 
     # Add regular skills (sorted by name)
     regular_skills = []
-    if SKILLS_DIR.exists():
-        for skill_dir in sorted(SKILLS_DIR.iterdir()):
+    if skills_dir.exists():
+        for skill_dir in sorted(skills_dir.iterdir()):
             if skill_dir.is_dir():
                 regular_skills.append(get_skill_info(skill_dir))
 
@@ -61,10 +61,10 @@ def get_installed_skills(destination: Path) -> Set[str]:
     installed = set()
     if destination.exists():
         installed.update({d.name for d in destination.iterdir() if d.is_dir()})
-    
+
     # Add installed plugins
     installed.update(get_installed_plugins())
-    
+
     return installed
 
 
