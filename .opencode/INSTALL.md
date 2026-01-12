@@ -89,10 +89,10 @@ Create project-specific skills in your OpenCode project:
 
 ```bash
 # In your OpenCode project
-mkdir -p .opencode/skills/my-project-skill
+mkdir -p .opencode/skill/my-project-skill
 ```
 
-Create `.opencode/skills/my-project-skill/SKILL.md`:
+Create `.opencode/skill/my-project-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -108,7 +108,7 @@ description: Use when [condition] - [what it does]
 **Skill Priority:** Project skills override personal skills, which override superpowers skills.
 
 **Skill Naming:**
-- `project:skill-name` - Force project skill lookup
+- `project:skill-name` - Force project skill lookup (checks .opencode/skill/ and .claude/skills/)
 - `skill-name` - Searches project → personal → superpowers
 - `superpowers:skill-name` - Force superpowers skill lookup
 
@@ -119,7 +119,7 @@ This repository contains the skills collection. When using this with the local s
 1. **Current directory skills**: Skills in this directory will be available as `superpowers:skill-name`
 2. **Plugin**: The plugin file is at `.opencode/plugin/superpowers.js` and references `../../skills` for the skills directory
 3. **Personal skills**: Can be added to `~/.config/opencode/skills/` and will override skills in this directory
-4. **Project skills**: Can be added to any project's `.opencode/skills/` directory
+4. **Project skills**: Can be added to any project's `.opencode/skill/` or `.claude/skills/` directory
 
 ## Updating
 

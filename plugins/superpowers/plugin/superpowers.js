@@ -16,7 +16,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
-  const projectSkillsDir = path.join(directory, '.opencode/skills');
+  // Support both .opencode/skill and .claude/skills for project skills
+  const projectSkillsDirs = [
+    path.join(directory, '.opencode/skill'),
+    path.join(directory, '.claude/skills')
+  ];
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
@@ -41,7 +45,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
 **Skills naming (priority order):**
-- Project skills: \`project:skill-name\` (in .opencode/skills/)
+- Project skills: \`project:skill-name\` (in .opencode/skill/ or .claude/skills/)
 - Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
 - Superpowers skills: \`superpowers:skill-name\`
 - Project skills override personal, which override superpowers when names match`;
@@ -95,14 +99,18 @@ ${toolMapping}
 
           // Try project skills first (if project: prefix or no prefix)
           if (forceProject || !skill_name.startsWith('superpowers:')) {
-            const projectPath = path.join(projectSkillsDir, actualSkillName);
-            const projectSkillFile = path.join(projectPath, 'SKILL.md');
-            if (fs.existsSync(projectSkillFile)) {
-              resolved = {
-                skillFile: projectSkillFile,
-                sourceType: 'project',
-                skillPath: actualSkillName
-              };
+            // Check both .opencode/skill and .claude/skills directories
+            for (const projectDir of projectSkillsDirs) {
+              const projectPath = path.join(projectDir, actualSkillName);
+              const projectSkillFile = path.join(projectPath, 'SKILL.md');
+              if (fs.existsSync(projectSkillFile)) {
+                resolved = {
+                  skillFile: projectSkillFile,
+                  sourceType: 'project',
+                  skillPath: actualSkillName
+                };
+                break;
+              }
             }
           }
 
@@ -149,7 +157,10 @@ ${toolMapping}
         description: 'List all available skills in the project, personal, and superpowers skill libraries.',
         args: {},
         execute: async (args, context) => {
-          const projectSkills = skillsCore.findSkillsInDir(projectSkillsDir, 'project', 3);
+          const projectSkills = [];
+          for (const projectDir of projectSkillsDirs) {
+            projectSkills.push(...skillsCore.findSkillsInDir(projectDir, 'project', 3));
+          }
           const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 3);
           const superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 3);
 
@@ -157,7 +168,7 @@ ${toolMapping}
           const allSkills = [...projectSkills, ...personalSkills, ...superpowersSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/ or add project skills to .opencode/skills/';
+            return 'No skills found. Install superpowers skills to ~/.config/opencode/skills/ or add project skills to .opencode/skill/ or .claude/skills/';
           }
 
           let output = 'Available skills:\n\n';

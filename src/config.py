@@ -24,4 +24,5 @@ SKILLS_DIR = Path("skills")
 DEFAULT_BASE_DIR = Path.home() / "Code"
 if not DEFAULT_BASE_DIR.exists():
     DEFAULT_BASE_DIR = Path.home()
-DESTINATION = DEFAULT_BASE_DIR / ".config" / "opencode" / "skill"
+# Note: OpenCode uses .opencode/skill (singular), Claude uses .claude/skills (plural)
+DESTINATION = DEFAULT_BASE_DIR / ".config" / "opencode" / "skills"

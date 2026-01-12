@@ -22,4 +22,4 @@ dev = [
 ]
 
 [tool.pyrefly]
-search_path = ["src"]
+search_path = ["."]

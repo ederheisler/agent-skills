@@ -54,7 +54,7 @@ textual run skills_manager.py:app
 ### Workflow
 
 1. **Select Destination** - Choose where to install skills:
-   - Global: `~/.config/opencode/skill/`
+   - Global: `~/.config/opencode/skills/`
    - OpenCode: `./.opencode/skill/`
    - Claude: `./.claude/skills/`
 
@@ -84,7 +84,7 @@ The installer extracts `name` and `description` from the frontmatter to display 
 
 ## Destination Paths
 
-### Global Skills (~/.config/opencode/skill/)
+### Global Skills (~/.config/opencode/skills/)
 
 Installed globally for all OpenCode projects. Requires creating the directory structure.
 
