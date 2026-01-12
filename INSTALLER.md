@@ -30,13 +30,13 @@ pip install textual
 
 ```bash
 # Method 1: Direct Python (if textual is installed)
-python3 install.py
+python3 skills_manager.py
 
 # Method 2: Using uv run (recommended, installs dependencies automatically)
-uv run --with textual python3 install.py
+uv run --with textual python3 skills_manager.py
 
 # Method 3: Using Textual CLI
-textual run install.py:app
+textual run skills_manager.py:app
 ```
 
 ### Keyboard Controls
@@ -45,6 +45,7 @@ textual run install.py:app
 |-----|--------|
 | `↑` / `↓` | Navigate up/down |
 | `Space` | Toggle selection |
+| `U` | Select all installed skills for update |
 | `Enter` | Apply selections (install/remove) |
 | `Esc` | Clear all selections |
 | `Q` | Quit |
@@ -132,4 +133,4 @@ The installer is built with:
 - **Screen system** - Separate destination and skill selection screens
 - **Keyboard-only design** - No mouse input required
 
-See the source code (`install.py`) for implementation details and to customize behavior.
+See the source code (`skills_manager.py`) for implementation details and to customize behavior.

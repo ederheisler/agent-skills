@@ -10,7 +10,7 @@ Use the interactive TUI installer to manage skills:
 
 ```bash
 # Using uv (recommended)
-uv run --with textual python3 install.py
+uv run --with textual python3 skills_manager.py
 
 # Or if textual is installed
 python3 install.py
