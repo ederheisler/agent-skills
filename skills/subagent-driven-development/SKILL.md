@@ -43,12 +43,14 @@ digraph when_to_use {
 ## Delegation Guardrails (Hybrid)
 
 **Never delegate:**
+
 - Architecture decisions or scope changes
 - Tasks with ambiguous requirements or missing acceptance criteria
 - Work that spans multiple subsystems or shared files
 - User-facing tradeoffs or policy decisions
 
 **Risk gate (delegate only if low):**
+
 - Low coupling to other tasks
 - Clear, bounded acceptance criteria
 - Small blast radius if wrong
