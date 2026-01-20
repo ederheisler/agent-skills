@@ -1,9 +1,10 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Dispatch subagents in parallel when there are 2+ independent problem domains (separate failures/subsystems) that can be investigated without shared state or sequential dependencies; avoid when work is tightly coupled, ambiguous, or requires main-agent decisions.
 metadata:
   author: obra
-  version: "1.0"
+  version: "1.1"
+  co-author: eder
 ---
 
 # Dispatching Parallel Agents
@@ -32,7 +33,7 @@ digraph when_to_use {
     "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
     "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
 }
-```text
+```
 
 **Use when:**
 
@@ -46,6 +47,25 @@ digraph when_to_use {
 - Failures are related (fix one might fix others)
 - Need to understand full system state
 - Agents would interfere with each other
+
+## Delegation Guardrails (Hybrid)
+
+**Never delegate:**
+- Architecture decisions or scope changes
+- Tasks with ambiguous requirements or missing acceptance criteria
+- Work that spans multiple subsystems or shared files
+- User-facing tradeoffs or policy decisions
+
+**Risk gate (delegate only if low):**
+- Low coupling to other tasks
+- Clear, bounded acceptance criteria
+- Small blast radius if wrong
+
+## Subagent Tracking (Avoid Stalls)
+
+- Create a simple registry: task, owner, start time, expected output
+- Require a short status update after a timebox
+- If no response, cancel and reassign to main agent
 
 ## The Pattern
 

@@ -1,9 +1,10 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Execute implementation plans in the current session by dispatching one subagent per mostly independent task with two-stage review (spec compliance, then code quality); avoid for tightly coupled or ambiguous tasks.
 metadata:
   author: obra
-  version: "1.0"
+  version: "1.1"
+  co-author: eder
 ---
 
 # Subagent-Driven Development
@@ -30,7 +31,7 @@ digraph when_to_use {
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
     "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
 }
-```text
+```
 
 **vs. Executing Plans (parallel session):**
 
@@ -38,6 +39,25 @@ digraph when_to_use {
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
+
+## Delegation Guardrails (Hybrid)
+
+**Never delegate:**
+- Architecture decisions or scope changes
+- Tasks with ambiguous requirements or missing acceptance criteria
+- Work that spans multiple subsystems or shared files
+- User-facing tradeoffs or policy decisions
+
+**Risk gate (delegate only if low):**
+- Low coupling to other tasks
+- Clear, bounded acceptance criteria
+- Small blast radius if wrong
+
+## Subagent Tracking (Avoid Stalls)
+
+- Create a simple registry: task, owner, start time, expected output
+- Require a short status update after a timebox
+- If no response, cancel and reassign to main agent
 
 ## The Process
 
