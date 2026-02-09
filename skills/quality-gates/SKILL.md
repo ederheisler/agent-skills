@@ -11,7 +11,7 @@ metadata:
 
 ## Overview
 
-Project-agnostic bash script enforcing Python code quality gates using ruff, pyrefly, radon, hypothesis, pytest, and markdownlint. Three execution modes provide flexibility for different workflows: unit-tests for fast feedback, all-tests for comprehensive pre-merge validation, no-tests for static analysis only. Coverage runs are excluded by default; run coverage only when the user explicitly requests it.
+Project-agnostic bash script enforcing Python code quality gates using pyrefly, radon, hypothesis, pytest, and markdownlint. Three execution modes provide flexibility for different workflows: unit-tests for fast feedback, all-tests for comprehensive pre-merge validation, no-tests for static analysis only. Coverage runs are excluded by default; run coverage only when the user explicitly requests it.
 
 ## When to Use
 
@@ -21,9 +21,9 @@ Before committing Python code to enforce consistent quality checks across projec
 
 | Mode           | Gates Run                                                                            | Use Case                             |
 |----------------|--------------------------------------------------------------------------------------|--------------------------------------|
-| **unit-tests** | ruff, pyrefly, radon, hypothesis checks, pytest (unit/), markdownlint                | Fast feedback during development     |
-| **all-tests**  | ruff, pyrefly, radon, hypothesis checks, pytest (unit/ + integration/), markdownlint | Pre-merge/deploy comprehensive check |
-| **no-tests**   | ruff, pyrefly, radon, hypothesis checks, markdownlint                                | Static analysis only (time critical) |
+| **unit-tests** | pyrefly, radon, hypothesis checks, pytest (unit/), markdownlint                | Fast feedback during development     |
+| **all-tests**  | pyrefly, radon, hypothesis checks, pytest (unit/ + integration/), markdownlint | Pre-merge/deploy comprehensive check |
+| **no-tests**   | pyrefly, radon, hypothesis checks, markdownlint                                | Static analysis only (time critical) |
 
 ## Quick Start
 

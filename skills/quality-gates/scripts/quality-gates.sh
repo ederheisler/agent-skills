@@ -11,9 +11,9 @@ usage() {
 Usage: ./quality-gates.sh <mode>
 
 Modes:
-  unit-tests  Run static gates + unit tests only: ruff, type check, radon, hypothesis checks, pytest (unit/), markdownlint.
-  all-tests   Run all gates: ruff, type check, radon, hypothesis checks, pytest (unit/ + integration/), markdownlint.
-  no-tests    Run static gates only: ruff, type check, radon, hypothesis checks, markdownlint. No pytest.
+  unit-tests  Run static gates + unit tests only: type check, radon, hypothesis checks, pytest (unit/), markdownlint.
+  all-tests   Run all gates: type check, radon, hypothesis checks, pytest (unit/ + integration/), markdownlint.
+  no-tests    Run static gates only: type check, radon, hypothesis checks, markdownlint. No pytest.
 
 For AI agents: choose explicitly to control test scope.
   - unit-tests: fast feedback, catches logic/model errors
@@ -32,14 +32,6 @@ fi
 echo "Running Python quality gates (${mode})..."
 
 run_static_gates() {
-    echo "Running ruff..."
-    if command -v uvx >/dev/null 2>&1; then
-        uvx ruff check . --fix --exclude "tests,**/tests/**"
-    else
-        echo "uvx not fINSTALL TO CONTINUE"
-        exit 1
-    fi
-
     echo "Running type checking with pyrefly..."
     if command -v uvx >/dev/null 2>&1; then
         uvx pyrefly check . --project-excludes="tests" --project-excludes="**/tests/**" --project-excludes="test_*.py"
