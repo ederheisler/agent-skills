@@ -1,6 +1,6 @@
 ---
 name: writing-quality-tests
-description: Guide for writing robust, high-signal automated tests. Use when writing new tests, fixing flaky tests, refactoring test suites, or deciding between unit, integration, and E2E testing strategies. Covers patterns for deterministic, maintainable, and fast-feedback testing.
+description: Guide for writing robust, high-signal automated tests. Use when asking "How do I test this effectively?", fixing flaky tests, refactoring test suites, or deciding between unit/integration/E2E strategies. distinct from TDD (process); this skill focuses on test quality and architecture.
 license: Complete terms in LICENSE.txt
 metadata:
   author: eder
@@ -11,7 +11,7 @@ metadata:
 
 ## Overview
 
-High-signal tests prove behavior, not implementation. Favor stable interfaces, explicit oracles, and fast feedback. Default to the lowest level that proves the behavior; climb the pyramid only when integration proof is required.
+High-signal tests prove behavior, not implementation. While TDD focuses on the *process* of writing tests first, this skill focuses on the *artifact*—making tests stable, explicit, and valuable long-term.
 
 **Core rule:** If a test is nondeterministic or tied to internals, it is debt. Fix it.
 
