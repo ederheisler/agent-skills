@@ -1,6 +1,6 @@
 ---
 name: writing-quality-tests
-description: Use when designing or refactoring automated tests to make them high-signal, reliable, and maintainable across unit, integration, and end-to-end suites.
+description: Guide for writing robust, high-signal automated tests. Use when writing new tests, fixing flaky tests, refactoring test suites, or deciding between unit, integration, and E2E testing strategies. Covers patterns for deterministic, maintainable, and fast-feedback testing.
 license: Complete terms in LICENSE.txt
 metadata:
   author: eder
@@ -17,11 +17,14 @@ High-signal tests prove behavior, not implementation. Favor stable interfaces, e
 
 ## When to Use
 
-- Designing or refactoring tests for new features, bug fixes, or regressions
-- Hardening flaky tests or slow suites
-- Reviewing test submissions for clarity, coverage, and maintainability
-- Choosing between unit, contract, integration, or end-to-end coverage for a change
-- Not for manual exploratory testing or load/perf-only work; use this for automated behavioral/regression checks
+- **New features**: "I need to add tests for this new API endpoint/component."
+- **Bug fixes**: "Help me write a regression test for this bug before fixing it."
+- **Flaky tests**: "This test fails randomly on CI. How do I make it deterministic?"
+- **Refactoring**: "I want to refactor this legacy code but the tests are brittle. How do I improve them first?"
+- **Slow tests**: "The test suite takes too long. How can I speed it up or mock dependencies effectively?"
+- **Test Design**: "Should I use a unit test or integration test for this logic?"
+- **Review**: "Check these tests for maintainability, coverage, and clarity."
+- Not for manual exploratory testing or load/perf-only work.
 
 ## Non-Negotiables
 
