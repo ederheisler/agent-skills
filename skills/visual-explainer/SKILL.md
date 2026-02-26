@@ -24,15 +24,22 @@ Before writing HTML, commit to a direction. Don't default to "dark theme with bl
 
 **What type of diagram?** Architecture, flowchart, sequence, data flow, schema/ER, state machine, mind map, data table, timeline, or dashboard. Each has distinct layout needs and rendering approaches (see Diagram Types below).
 
-**What aesthetic?** Pick one and commit:
-- Monochrome terminal (green/amber on black, monospace everything)
-- Editorial (serif headlines, generous whitespace, muted palette)
-- Blueprint (technical drawing feel, grid lines, precise)
-- Neon dashboard (saturated accents on deep dark, glowing edges)
-- Paper/ink (warm cream background, sketchy borders, informal feel)
-- IDE-inspired (borrow a real color scheme: Dracula, Nord, Catppuccin, Solarized, Gruvbox, One Dark)
-- Data-dense (small type, tight spacing, maximum information)
-- Gradient mesh (bold gradients, glassmorphism, modern SaaS feel)
+**What aesthetic?** Pick one and commit. The constrained aesthetics (Blueprint, Editorial, Paper/ink) are safer — they have specific requirements that prevent generic output. The flexible ones (IDE-inspired) require more discipline.
+
+**Constrained aesthetics (prefer these):**
+- Blueprint (technical drawing feel, subtle grid background, deep slate/blue palette, monospace labels, precise borders) — see `websocket-implementation-plan.html` for reference
+- Editorial (serif headlines like Instrument Serif or Crimson Pro, generous whitespace, muted earth tones or deep navy + gold)
+- Paper/ink (warm cream `#faf7f5` background, terracotta/sage accents, informal feel)
+- Monochrome terminal (green/amber on near-black, monospace everything, CRT glow optional)
+
+**Flexible aesthetics (use with caution):**
+- IDE-inspired (borrow a real, named color scheme: Dracula, Nord, Catppuccin Mocha/Latte, Solarized Dark/Light, Gruvbox, One Dark, Rosé Pine) — commit to the actual palette, don't approximate
+- Data-dense (small type, tight spacing, maximum information, muted colors)
+
+**Explicitly forbidden:**
+- Neon dashboard (cyan + magenta + purple on dark) — always produces AI slop
+- Gradient mesh (pink/purple/cyan blobs) — too generic
+- Any combination of Inter font + violet/indigo accents + gradient text
 
 Vary the choice each time. If the last diagram was dark and technical, make the next one light and editorial. The swap test: if you replaced your styling with a generic dark theme and nobody would notice the difference, you haven't designed anything.
 
@@ -97,9 +104,31 @@ See `./references/css-patterns.md` for image container styles (hero banners, inl
 
 Apply these principles to every diagram:
 
-**Typography is the diagram.** Pick a distinctive font pairing from Google Fonts. A display/heading font with character, plus a mono font for technical labels. Never use Inter, Roboto, Arial, or system-ui as the primary font. Load via `<link>` in `<head>`. Include a system font fallback in the `font-family` stack for offline resilience.
+**Typography is the diagram.** Pick a distinctive font pairing from the list in `./references/libraries.md`. Every page should use a different pairing from recent generations.
 
-**Color tells a story.** Use CSS custom properties for the full palette. Define at minimum: `--bg`, `--surface`, `--border`, `--text`, `--text-dim`, and 3-5 accent colors. Each accent should have a full and a dim variant (for backgrounds). Name variables semantically when possible (`--pipeline-step` not `--blue-3`). Support both themes. Put your primary aesthetic in `:root` and the alternate in the media query:
+**Forbidden as `--font-body`:** Inter, Roboto, Arial, Helvetica, system-ui alone. These are AI slop signals.
+
+**Good pairings (use these):**
+- DM Sans + Fira Code (technical, precise)
+- Instrument Serif + JetBrains Mono (editorial, refined)
+- IBM Plex Sans + IBM Plex Mono (reliable, readable)
+- Bricolage Grotesque + Fragment Mono (bold, characterful)
+- Plus Jakarta Sans + Azeret Mono (rounded, approachable)
+
+Load via `<link>` in `<head>`. Include a system font fallback in the `font-family` stack for offline resilience.
+
+**Color tells a story.** Use CSS custom properties for the full palette. Define at minimum: `--bg`, `--surface`, `--border`, `--text`, `--text-dim`, and 3-5 accent colors. Each accent should have a full and a dim variant (for backgrounds). Name variables semantically when possible (`--pipeline-step` not `--blue-3`). Support both themes.
+
+**Forbidden accent colors:** `#8b5cf6` `#7c3aed` `#a78bfa` (indigo/violet), `#d946ef` (fuchsia), the cyan-magenta-pink combination. These are Tailwind defaults that signal zero design intent.
+
+**Good accent palettes (use these):**
+- Terracotta + sage (`#c2410c`, `#65a30d`) — warm, earthy
+- Teal + slate (`#0891b2`, `#0369a1`) — technical, precise
+- Rose + cranberry (`#be123c`, `#881337`) — editorial, refined
+- Amber + emerald (`#d97706`, `#059669`) — data-focused
+- Deep blue + gold (`#1e3a5f`, `#d4a73a`) — premium, sophisticated
+
+Put your primary aesthetic in `:root` and the alternate in the media query:
 
 ```css
 /* Light-first (editorial, paper/ink, blueprint): */
@@ -120,6 +149,13 @@ Apply these principles to every diagram:
 **Surface depth creates hierarchy.** Vary card depth to signal what matters. Hero sections get elevated shadows and accent-tinted backgrounds (`ve-card--hero` pattern). Body content stays flat (default `.ve-card`). Code blocks and secondary content feel recessed (`ve-card--recessed`). See the depth tiers in `./references/css-patterns.md`. Don't make everything elevated — when everything pops, nothing does.
 
 **Animation earns its place.** Staggered fade-ins on page load are almost always worth it — they guide the eye through the diagram's hierarchy. Mix animation types by role: `fadeUp` for cards, `fadeScale` for KPIs and badges, `drawIn` for SVG connectors, `countUp` for hero numbers. Hover transitions on interactive-feeling elements make the diagram feel alive. Always respect `prefers-reduced-motion`. CSS transitions and keyframes handle most cases. For orchestrated multi-element sequences, anime.js via CDN is available (see `./references/libraries.md`).
+
+**Forbidden animations:**
+- Animated glowing box-shadows (`@keyframes glow { box-shadow: 0 0 20px... }`) — this is AI slop
+- Pulsing/breathing effects on static content
+- Continuous animations that run after page load (except for progress indicators)
+
+Keep animations purposeful: entrance reveals, hover feedback, and user-initiated interactions. Nothing should glow or pulse on its own.
 
 ### 4. Deliver
 
@@ -245,3 +281,72 @@ Before delivering, verify:
 - **No overflow**: Resize the browser to different widths. No content should clip or escape its container. Every grid and flex child needs `min-width: 0`. Side-by-side panels need `overflow-wrap: break-word`. Never use `display: flex` on `<li>` for marker characters — it creates anonymous flex items that can't shrink, causing lines with many inline `<code>` badges to overflow. Use absolute positioning for markers instead. See the Overflow Protection section in `./references/css-patterns.md`.
 - **Mermaid zoom controls**: Every `.mermaid-wrap` container must have zoom controls (+/−/reset buttons), Ctrl/Cmd+scroll zoom, and click-and-drag panning. Complex diagrams render too small without them. The cursor should change to `grab` when zoomed in and `grabbing` while dragging. See `./references/css-patterns.md` for the full pattern.
 - **File opens cleanly**: No console errors, no broken font loads, no layout shifts.
+
+## Anti-Patterns (AI Slop)
+
+These patterns are explicitly forbidden. They signal "AI-generated template" and undermine the skill's purpose of producing distinctive, high-quality diagrams. Review every generated page against this list.
+
+### Typography
+
+**Forbidden fonts as primary `--font-body`:**
+- Inter — the single most overused AI default
+- Roboto, Arial, Helvetica — generic system fallbacks promoted to primary
+- system-ui, sans-serif alone — no character, no intent
+
+**Required:** Pick from the font pairings in `./references/libraries.md`. Every generation should use a different pairing from the last.
+
+### Color Palette
+
+**Forbidden accent colors:**
+- Indigo-500/violet-500 (`#8b5cf6`, `#7c3aed`, `#a78bfa`) — Tailwind's default purple range
+- The cyan + magenta + pink neon gradient combination (`#06b6d4` → `#d946ef` → `#f472b6`)
+- Any palette that could be described as "Tailwind defaults with purple/pink/cyan accents"
+
+**Forbidden color effects:**
+- Gradient text on headings (`background: linear-gradient(...); background-clip: text;`) — this screams AI-generated
+- Animated glowing box-shadows on cards (`box-shadow: 0 0 20px var(--glow); animation: glow 2s...`)
+- Multiple overlapping radial glows in accent colors creating a "neon haze"
+
+**Required:** Build palettes from the reference templates (terracotta/sage, teal/cyan, rose/cranberry, slate/blue) or derive from real IDE themes (Dracula, Nord, Solarized, Gruvbox, Catppuccin). Accents should feel intentional, not default.
+
+### Section Headers
+
+**Forbidden:**
+- Emoji icons in section headers (🏗️, ⚙️, 📁, 💻, 📅, 🔗, ⚡, 🔧, 📦, 🚀, etc.)
+- Section headers that all use the same icon-in-rounded-box pattern
+
+**Required:** Use styled monospace labels with colored dot indicators (see `.section-label` in templates), numbered badges (`section__num` pattern), or asymmetric section dividers. If an icon is genuinely needed, use an inline SVG that matches the palette — not emoji.
+
+### Layout & Hierarchy
+
+**Forbidden:**
+- Perfectly centered everything with uniform padding
+- All cards styled identically with the same border-radius, shadow, and spacing
+- Every section getting equal visual treatment — no hero/primary vs. secondary distinction
+- Symmetric layouts where left and right halves mirror each other
+
+**Required:** Vary visual weight. Hero sections should dominate (larger type, more padding, accent-tinted background). Reference sections should feel compact. Use the depth tiers (hero → elevated → default → recessed). Asymmetric layouts create interest.
+
+### Template Patterns
+
+**Forbidden:**
+- Three-dot window chrome (red/yellow/green dots) on code blocks — this is a cliché
+- KPI cards where every metric has identical gradient text treatment
+- "Neon Dashboard" as an aesthetic choice — it always produces generic results
+- Gradient meshes with pink/purple/cyan blobs in the background
+
+**Required:** Code blocks use a simple header with filename or language label. KPI cards vary by importance — hero numbers for the primary metric, subdued treatment for supporting metrics. Pick aesthetics with natural constraints: Blueprint (must feel technical/precise), Editorial (must have generous whitespace and serif typography), Paper/ink (must feel warm and informal).
+
+### The Slop Test
+
+Before delivering, apply this test: **Would a developer looking at this page immediately think "AI generated this"?** The telltale signs:
+
+1. Inter or Roboto font with purple/violet gradient accents
+2. Every heading has `background-clip: text` gradient
+3. Emoji icons leading every section
+4. Glowing cards with animated shadows
+5. Cyan-magenta-pink color scheme on dark background
+6. Perfectly uniform card grid with no visual hierarchy
+7. Three-dot code block chrome
+
+If two or more of these are present, the page is slop. Regenerate with a different aesthetic direction — Editorial, Blueprint, Paper/ink, or a specific IDE theme. These constrained aesthetics are harder to mess up because they have specific visual requirements that prevent defaulting to generic patterns.

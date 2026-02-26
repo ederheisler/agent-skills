@@ -22,7 +22,7 @@ Follow the visual-explainer skill workflow. Read the reference template, CSS pat
 - Read all changed files in full — include surrounding code paths needed to validate behavior
 - Check whether `CHANGELOG.md` has an entry for these changes
 - Check whether `README.md` or `docs/*.md` need updates given any new or changed features
-- Reconstruct decision rationale: if this work was done in the current session, mine the conversation for approaches discussed, alternatives rejected, and trade-offs made. Check for progress docs (`~/.agent/memory/{project}/progress.md`) or plan files (`./docs/plans`) that may contain reasoning. For committed changes, read commit messages and PR descriptions.
+- Reconstruct decision rationale: if this work was done in the current session, mine the conversation for approaches discussed, alternatives rejected, and trade-offs made. Check for progress docs (`~/.agent/memory/{project}/progress.md`, `~/.pi/agent/memory/{project}/progress.md`) or plan files that may contain reasoning. For committed changes, read commit messages and PR descriptions.
 
 **Verification checkpoint** — before generating HTML, produce a structured fact sheet of every claim you will present in the review:
 - Every quantitative figure: line counts, file counts, function counts, test counts
