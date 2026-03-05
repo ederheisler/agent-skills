@@ -149,13 +149,10 @@
     padding: 32px 24px;
     overflow: auto;
     margin-bottom: 24px;
-  }
-
-  .mermaid-wrap .mermaid {
     display: flex;
     justify-content: center;
-    transition: transform 0.2s ease;
-    transform-origin: top center;
+    align-items: center;
+    min-height: 400px;
   }
 
   .zoom-controls {
@@ -204,7 +201,7 @@
   }
   .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap { cursor: grab; }
   .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
 
   /* ============ MERMAID SVG OVERRIDES ============ */
@@ -300,6 +297,7 @@
       <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
       <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
       <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+      <button onclick="openDiagramFullscreen(this)" title="Open full size in new tab">&#x26F6;</button>
     </div>
     <pre class="mermaid">
       graph TD
@@ -370,28 +368,53 @@
   });
 </script>
 <script>
-  function updateZoomState(wrap) {
-    var target = wrap.querySelector('.mermaid');
-    var zoom = parseFloat(target.dataset.zoom || '1');
-    wrap.classList.toggle('is-zoomed', zoom > 1);
-  }
+  var INITIAL_ZOOM = 1;
 
   function zoomDiagram(btn, factor) {
     var wrap = btn.closest('.mermaid-wrap');
     var target = wrap.querySelector('.mermaid');
-    var current = parseFloat(target.dataset.zoom || '1');
-    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    var current = parseFloat(target.dataset.zoom || INITIAL_ZOOM);
+    var next = Math.min(Math.max(current * factor, 0.5), 5);
     target.dataset.zoom = next;
-    target.style.transform = 'scale(' + next + ')';
-    updateZoomState(wrap);
+    target.style.zoom = next;
   }
 
   function resetZoom(btn) {
     var wrap = btn.closest('.mermaid-wrap');
     var target = wrap.querySelector('.mermaid');
-    target.dataset.zoom = '1';
-    target.style.transform = 'scale(1)';
-    updateZoomState(wrap);
+    target.dataset.zoom = INITIAL_ZOOM;
+    target.style.zoom = INITIAL_ZOOM;
+  }
+
+  function openDiagramFullscreen(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    openMermaidInNewTab(wrap);
+  }
+
+  function openMermaidInNewTab(wrap) {
+    var svg = wrap.querySelector('.mermaid svg');
+    if (!svg) return;
+
+    var clone = svg.cloneNode(true);
+    clone.style.zoom = '';
+    clone.style.transform = '';
+
+    var styles = getComputedStyle(document.documentElement);
+    var bg = styles.getPropertyValue('--bg').trim() || '#ffffff';
+
+    var html = '<!DOCTYPE html>' +
+      '<html lang="en"><head><meta charset="UTF-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+      '<title>Diagram</title>' +
+      '<style>' +
+      'body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: ' + bg + '; padding: 40px; box-sizing: border-box; }' +
+      'svg { max-width: 100%; max-height: 90vh; height: auto; }' +
+      '</style></head><body>' +
+      clone.outerHTML +
+      '</body></html>';
+
+    var blob = new Blob([html], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
   }
 
   document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
@@ -400,33 +423,40 @@
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       var target = wrap.querySelector('.mermaid');
-      var current = parseFloat(target.dataset.zoom || '1');
+      var current = parseFloat(target.dataset.zoom || INITIAL_ZOOM);
       var factor = e.deltaY < 0 ? 1.1 : 0.9;
-      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      var next = Math.min(Math.max(current * factor, 0.5), 5);
       target.dataset.zoom = next;
-      target.style.transform = 'scale(' + next + ')';
-      updateZoomState(wrap);
+      target.style.zoom = next;
     }, { passive: false });
 
-    // Drag-to-pan
-    var startX, startY, scrollL, scrollT;
+    // Click-and-drag to pan, click (without drag) to open full-size
+    var startX, startY, scrollL, scrollT, startTime, didPan;
     wrap.addEventListener('mousedown', function(e) {
       if (e.target.closest('.zoom-controls')) return;
-      var target = wrap.querySelector('.mermaid');
-      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
       wrap.classList.add('is-panning');
       startX = e.clientX;
       startY = e.clientY;
       scrollL = wrap.scrollLeft;
       scrollT = wrap.scrollTop;
+      startTime = Date.now();
+      didPan = false;
     });
     window.addEventListener('mousemove', function(e) {
       if (!wrap.classList.contains('is-panning')) return;
-      wrap.scrollLeft = scrollL - (e.clientX - startX);
-      wrap.scrollTop = scrollT - (e.clientY - startY);
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didPan = true;
+      wrap.scrollLeft = scrollL - dx;
+      wrap.scrollTop = scrollT - dy;
     });
     window.addEventListener('mouseup', function() {
+      if (!wrap.classList.contains('is-panning')) return;
       wrap.classList.remove('is-panning');
+      var elapsed = Date.now() - startTime;
+      if (!didPan && elapsed < 300) {
+        openMermaidInNewTab(wrap);
+      }
     });
   });
 </script>

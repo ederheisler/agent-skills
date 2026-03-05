@@ -641,6 +641,7 @@ Full-viewport Mermaid diagram. Max 8–10 nodes (presentation scale — fewer, l
       <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
       <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
       <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+      <button onclick="openDiagramFullscreen(this)" title="Open full size in new tab">&#x26F6;</button>
     </div>
     <pre class="mermaid">
       graph TD
@@ -649,6 +650,8 @@ Full-viewport Mermaid diagram. Max 8–10 nodes (presentation scale — fewer, l
   </div>
 </section>
 ```
+
+**Click to expand.** Clicking anywhere on the diagram (without dragging) opens it full-size in a new browser tab. The expand button (⛶) provides the same functionality for discoverability.
 
 ```css
 .slide--diagram {
