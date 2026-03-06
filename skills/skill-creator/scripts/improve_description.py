@@ -2,22 +2,73 @@
 """Improve a skill description based on eval results.
 
 Takes eval results (from run_eval.py) and generates an improved description
-using Claude with extended thinking.
+using OpenCode CLI.
 """
 
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
-
-import anthropic
 
 from scripts.utils import parse_skill_md
 
 
+def _run_opencode_prompt(prompt: str, model: str | None) -> tuple[str, dict]:
+    """Run a prompt through opencode and return text and usage stats."""
+    cmd = ["opencode", "run", "--format", "json", prompt]
+    if model:
+        cmd.extend(["--model", model])
+
+    completed = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    text_parts: list[str] = []
+    usage_totals = {
+        "total": 0,
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+    }
+    total_cost = 0.0
+    for line in completed.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        if event.get("type") != "text":
+            if event.get("type") == "step_finish":
+                part = event.get("part", {})
+                tokens = part.get("tokens", {})
+                for key in usage_totals:
+                    value = tokens.get(key, 0)
+                    if isinstance(value, int):
+                        usage_totals[key] += value
+                cost = part.get("cost", 0)
+                if isinstance(cost, (int, float)):
+                    total_cost += float(cost)
+            continue
+        part = event.get("part", {})
+        text = part.get("text")
+        if isinstance(text, str) and text:
+            text_parts.append(text)
+
+    return "\n".join(text_parts).strip(), {
+        "tokens": usage_totals,
+        "cost": total_cost,
+    }
+
+
 def improve_description(
-    client: anthropic.Anthropic,
     skill_name: str,
     skill_content: str,
     current_description: str,
@@ -28,27 +79,29 @@ def improve_description(
     log_dir: Path | None = None,
     iteration: int | None = None,
 ) -> str:
-    """Call Claude to improve the description based on eval results."""
+    """Call OpenCode to improve the description based on eval results."""
     failed_triggers = [
-        r for r in eval_results["results"]
-        if r["should_trigger"] and not r["pass"]
+        r for r in eval_results["results"] if r["should_trigger"] and not r["pass"]
     ]
     false_triggers = [
-        r for r in eval_results["results"]
-        if not r["should_trigger"] and not r["pass"]
+        r for r in eval_results["results"] if not r["should_trigger"] and not r["pass"]
     ]
 
     # Build scores summary
-    train_score = f"{eval_results['summary']['passed']}/{eval_results['summary']['total']}"
+    train_score = (
+        f"{eval_results['summary']['passed']}/{eval_results['summary']['total']}"
+    )
     if test_results:
-        test_score = f"{test_results['summary']['passed']}/{test_results['summary']['total']}"
+        test_score = (
+            f"{test_results['summary']['passed']}/{test_results['summary']['total']}"
+        )
         scores_summary = f"Train: {train_score}, Test: {test_score}"
     else:
         scores_summary = f"Train: {train_score}"
 
-    prompt = f"""You are optimizing a skill description for a Claude Code skill called "{skill_name}". A "skill" is sort of like a prompt, but with progressive disclosure -- there's a title and description that Claude sees when deciding whether to use the skill, and then if it does use the skill, it reads the .md file which has lots more details and potentially links to other resources in the skill folder like helper files and scripts and additional documentation or examples.
+    prompt = f"""You are optimizing a skill description for an OpenCode skill called "{skill_name}". A "skill" is sort of like a prompt, but with progressive disclosure -- there's a title and description that OpenCode sees when deciding whether to use the skill, and then if it does use the skill, it reads the .md file which has lots more details and potentially links to other resources in the skill folder like helper files and scripts and additional documentation or examples.
 
-The description appears in Claude's "available_skills" list. When a user sends a query, Claude decides whether to invoke the skill based solely on the title and on this description. Your goal is to write a description that triggers for relevant queries, and doesn't trigger for irrelevant ones.
+The description appears in OpenCode's "available_skills" list. When a user sends a query, OpenCode decides whether to invoke the skill based solely on the title and on this description. Your goal is to write a description that triggers for relevant queries, and doesn't trigger for irrelevant ones.
 
 Here's the current description:
 <current_description>
@@ -61,22 +114,30 @@ Current scores ({scores_summary}):
     if failed_triggers:
         prompt += "FAILED TO TRIGGER (should have triggered but didn't):\n"
         for r in failed_triggers:
-            prompt += f'  - "{r["query"]}" (triggered {r["triggers"]}/{r["runs"]} times)\n'
+            prompt += (
+                f'  - "{r["query"]}" (triggered {r["triggers"]}/{r["runs"]} times)\n'
+            )
         prompt += "\n"
 
     if false_triggers:
         prompt += "FALSE TRIGGERS (triggered but shouldn't have):\n"
         for r in false_triggers:
-            prompt += f'  - "{r["query"]}" (triggered {r["triggers"]}/{r["runs"]} times)\n'
+            prompt += (
+                f'  - "{r["query"]}" (triggered {r["triggers"]}/{r["runs"]} times)\n'
+            )
         prompt += "\n"
 
     if history:
         prompt += "PREVIOUS ATTEMPTS (do NOT repeat these — try something structurally different):\n\n"
         for h in history:
             train_s = f"{h.get('train_passed', h.get('passed', 0))}/{h.get('train_total', h.get('total', 0))}"
-            test_s = f"{h.get('test_passed', '?')}/{h.get('test_total', '?')}" if h.get('test_passed') is not None else None
+            test_s = (
+                f"{h.get('test_passed', '?')}/{h.get('test_total', '?')}"
+                if h.get("test_passed") is not None
+                else None
+            )
             score_str = f"train={train_s}" + (f", test={test_s}" if test_s else "")
-            prompt += f'<attempt {score_str}>\n'
+            prompt += f"<attempt {score_str}>\n"
             prompt += f'Description: "{h["description"]}"\n'
             if "results" in h:
                 prompt += "Train results:\n"
@@ -84,7 +145,7 @@ Current scores ({scores_summary}):
                     status = "PASS" if r["pass"] else "FAIL"
                     prompt += f'  [{status}] "{r["query"][:80]}" (triggered {r["triggers"]}/{r["runs"]})\n'
             if h.get("note"):
-                prompt += f'Note: {h["note"]}\n'
+                prompt += f"Note: {h['note']}\n"
             prompt += "</attempt>\n\n"
 
     prompt += f"""</scores_summary>
@@ -104,35 +165,21 @@ Concretely, your description should not be more than about 100-200 words, even i
 Here are some tips that we've found to work well in writing these descriptions:
 - The skill should be phrased in the imperative -- "Use this skill for" rather than "this skill does"
 - The skill description should focus on the user's intent, what they are trying to achieve, vs. the implementation details of how the skill works.
-- The description competes with other skills for Claude's attention — make it distinctive and immediately recognizable.
+- The description competes with other skills for OpenCode's attention — make it distinctive and immediately recognizable.
 - If you're getting lots of failures after repeated attempts, change things up. Try different sentence structures or wordings.
 
 I'd encourage you to be creative and mix up the style in different iterations since you'll have multiple opportunities to try different approaches and we'll just grab the highest-scoring one at the end. 
 
 Please respond with only the new description text in <new_description> tags, nothing else."""
 
-    response = client.messages.create(
-        model=model,
-        max_tokens=16000,
-        thinking={
-            "type": "enabled",
-            "budget_tokens": 10000,
-        },
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    # Extract thinking and text from response
+    text, usage = _run_opencode_prompt(prompt, model)
     thinking_text = ""
-    text = ""
-    for block in response.content:
-        if block.type == "thinking":
-            thinking_text = block.thinking
-        elif block.type == "text":
-            text = block.text
 
     # Parse out the <new_description> tags
     match = re.search(r"<new_description>(.*?)</new_description>", text, re.DOTALL)
-    description = match.group(1).strip().strip('"') if match else text.strip().strip('"')
+    description = (
+        match.group(1).strip().strip('"') if match else text.strip().strip('"')
+    )
 
     # Log the transcript
     transcript: dict = {
@@ -143,41 +190,35 @@ Please respond with only the new description text in <new_description> tags, not
         "parsed_description": description,
         "char_count": len(description),
         "over_limit": len(description) > 1024,
+        "usage": usage,
     }
 
     # If over 1024 chars, ask the model to shorten it
     if len(description) > 1024:
         shorten_prompt = f"Your description is {len(description)} characters, which exceeds the hard 1024 character limit. Please rewrite it to be under 1024 characters while preserving the most important trigger words and intent coverage. Respond with only the new description in <new_description> tags."
-        shorten_response = client.messages.create(
-            model=model,
-            max_tokens=16000,
-            thinking={
-                "type": "enabled",
-                "budget_tokens": 10000,
-            },
-            messages=[
-                {"role": "user", "content": prompt},
-                {"role": "assistant", "content": text},
-                {"role": "user", "content": shorten_prompt},
-            ],
+        rewrite_context = (
+            f"Original prompt:\n{prompt}\n\n"
+            f"Assistant response:\n{text}\n\n"
+            f"Follow-up instruction:\n{shorten_prompt}"
         )
-
+        shorten_text, rewrite_usage = _run_opencode_prompt(rewrite_context, model)
         shorten_thinking = ""
-        shorten_text = ""
-        for block in shorten_response.content:
-            if block.type == "thinking":
-                shorten_thinking = block.thinking
-            elif block.type == "text":
-                shorten_text = block.text
 
-        match = re.search(r"<new_description>(.*?)</new_description>", shorten_text, re.DOTALL)
-        shortened = match.group(1).strip().strip('"') if match else shorten_text.strip().strip('"')
+        match = re.search(
+            r"<new_description>(.*?)</new_description>", shorten_text, re.DOTALL
+        )
+        shortened = (
+            match.group(1).strip().strip('"')
+            if match
+            else shorten_text.strip().strip('"')
+        )
 
         transcript["rewrite_prompt"] = shorten_prompt
         transcript["rewrite_thinking"] = shorten_thinking
         transcript["rewrite_response"] = shorten_text
         transcript["rewrite_description"] = shortened
         transcript["rewrite_char_count"] = len(shortened)
+        transcript["rewrite_usage"] = rewrite_usage
         description = shortened
 
     transcript["final_description"] = description
@@ -191,12 +232,22 @@ Please respond with only the new description text in <new_description> tags, not
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Improve a skill description based on eval results")
-    parser.add_argument("--eval-results", required=True, help="Path to eval results JSON (from run_eval.py)")
+    parser = argparse.ArgumentParser(
+        description="Improve a skill description based on eval results"
+    )
+    parser.add_argument(
+        "--eval-results",
+        required=True,
+        help="Path to eval results JSON (from run_eval.py)",
+    )
     parser.add_argument("--skill-path", required=True, help="Path to skill directory")
-    parser.add_argument("--history", default=None, help="Path to history JSON (previous attempts)")
+    parser.add_argument(
+        "--history", default=None, help="Path to history JSON (previous attempts)"
+    )
     parser.add_argument("--model", required=True, help="Model for improvement")
-    parser.add_argument("--verbose", action="store_true", help="Print thinking to stderr")
+    parser.add_argument(
+        "--verbose", action="store_true", help="Print thinking to stderr"
+    )
     args = parser.parse_args()
 
     skill_path = Path(args.skill_path)
@@ -214,11 +265,12 @@ def main():
 
     if args.verbose:
         print(f"Current: {current_description}", file=sys.stderr)
-        print(f"Score: {eval_results['summary']['passed']}/{eval_results['summary']['total']}", file=sys.stderr)
+        print(
+            f"Score: {eval_results['summary']['passed']}/{eval_results['summary']['total']}",
+            file=sys.stderr,
+        )
 
-    client = anthropic.Anthropic()
     new_description = improve_description(
-        client=client,
         skill_name=name,
         skill_content=content,
         current_description=current_description,
@@ -233,13 +285,16 @@ def main():
     # Output as JSON with both the new description and updated history
     output = {
         "description": new_description,
-        "history": history + [{
-            "description": current_description,
-            "passed": eval_results["summary"]["passed"],
-            "failed": eval_results["summary"]["failed"],
-            "total": eval_results["summary"]["total"],
-            "results": eval_results["results"],
-        }],
+        "history": history
+        + [
+            {
+                "description": current_description,
+                "passed": eval_results["summary"]["passed"],
+                "failed": eval_results["summary"]["failed"],
+                "total": eval_results["summary"]["total"],
+                "results": eval_results["results"],
+            }
+        ],
     }
     print(json.dumps(output, indent=2))
 
