@@ -1,0 +1,36 @@
+{
+  "skill_name": "terraform-style-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to refactor this OCI OpenTofu repo so the root config stays thin and the repeated server fallback logic moves into locals or module inputs. Keep the existing terraform/ layout, use the repo's compartments and servers model, and make sure any command examples use tofu instead of terraform.",
+      "expected_output": "A response or code change proposal that is OpenTofu-first, respects the existing file layout, centralizes normalization logic, and uses repo-specific modeling guidance rather than generic Terraform boilerplate.",
+      "files": [
+        "terraform/main.tf",
+        "terraform/variables.tf",
+        "terraform/modules/server/main.tf"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Please review this HCL change for style problems before I merge it. I want feedback on naming, block ordering, variable descriptions, outputs, and whether it fits our OpenTofu conventions in terraform/ instead of suggesting a brand new layout.",
+      "expected_output": "A style review grounded in OpenTofu HCL conventions and this repo's existing structure, not a generic rewrite into unrelated files or Terraform-only recommendations.",
+      "files": [
+        "terraform/main.tf",
+        "terraform/outputs.tf",
+        "terraform/providers.tf",
+        "terraform/variables.tf"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I am adding import blocks for an existing OCI instance and public IP. Show me how to structure the resource blocks and imports so they are reviewable in git, keep compartment OCIDs centralized, and still stay broadly Terraform-compatible even though this repo runs on OpenTofu.",
+      "expected_output": "Guidance that prefers import blocks, keeps the repo's alias-based compartment model intact, uses tofu-based verification commands, and avoids provider-state dump style configuration.",
+      "files": [
+        "terraform/main.tf",
+        "terraform/variables.tf",
+        ".claude/skills/terraform-style-guide/SKILL.md"
+      ]
+    }
+  ]
+}

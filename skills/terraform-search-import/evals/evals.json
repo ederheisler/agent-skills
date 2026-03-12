@@ -1,0 +1,32 @@
+{
+  "skill_name": "terraform-search-import",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I already created two OCI compute instances manually and now I want them managed in this repo under the existing servers map and modules. Walk me through the OpenTofu-first adoption path, including how to discover identifiers, where to put import blocks, and which commands to run from terraform/.",
+      "expected_output": "An OpenTofu-oriented import workflow that prefers manual discovery plus import blocks, uses tofu commands from terraform/, and preserves the repo's current module structure.",
+      "files": [
+        "terraform/main.tf",
+        "terraform/modules/server/main.tf",
+        ".claude/skills/terraform-search-import/SKILL.md"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I saw docs about terraform query and Terraform Search. Should I use that here to adopt existing infrastructure, or is there a better path for this repo? I only need a safe, reviewable migration for a few resources.",
+      "expected_output": "A response that rejects terraform query as the default for this OpenTofu repo, explains why, and recommends import blocks or tofu import instead.",
+      "files": [
+        ".claude/skills/terraform-search-import/SKILL.md",
+        ".claude/skills/terraform-search-import/references/MANUAL-IMPORT.md"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Help me import a resource that lives under a module and another one created with for_each. I care about getting the final resource addresses right the first time so I do not have to clean up state afterward.",
+      "expected_output": "Guidance that emphasizes final resource addresses, module-qualified imports, keyed for_each addresses, and one-to-one mapping between remote objects and OpenTofu addresses.",
+      "files": [
+        ".claude/skills/terraform-search-import/SKILL.md"
+      ]
+    }
+  ]
+}

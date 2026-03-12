@@ -1,0 +1,33 @@
+{
+  "skill_name": "terraform-test",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a .tftest.hcl file for this OCI module that checks plan-mode behavior only. I want coverage for server name normalization, explicit compartment aliases, and the reserved public IP mapping, but I do not want a live apply against OCI.",
+      "expected_output": "An OpenTofu test file that uses tofu test syntax, prefers plan mode, and asserts repository-specific invariants instead of provider-computed IDs.",
+      "files": [
+        "terraform/main.tf",
+        "terraform/outputs.tf",
+        "terraform/variables.tf"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need a regression test for validation failures: a server without a valid compartment alias and another one with an unknown shape profile. Show me how to use expect_failures in OpenTofu so we catch both cases cleanly.",
+      "expected_output": "A .tftest.hcl example using expect_failures for invalid inputs, written with OpenTofu commands and semantics rather than Terraform-only wording.",
+      "files": [
+        "terraform/variables.tf",
+        ".claude/skills/terraform-test/SKILL.md"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Set up a lightweight CI validation sequence for this repo. I want fmt, init, validate, and tofu test in the right order, with a note explaining why apply-based OCI tests are not the default here.",
+      "expected_output": "CI or workflow guidance that is OpenTofu-first, uses tofu commands, and explicitly distinguishes low-risk plan-mode tests from expensive live OCI integration tests.",
+      "files": [
+        "terraform/README.md",
+        ".claude/skills/terraform-test/SKILL.md"
+      ]
+    }
+  ]
+}
