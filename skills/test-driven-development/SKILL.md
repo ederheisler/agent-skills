@@ -1,9 +1,6 @@
 ---
 name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
-metadata:
-  author: obra
-  version: "1.0"
 ---
 
 # Test-Driven Development (TDD)
@@ -19,14 +16,12 @@ Write the test first. Watch it fail. Write minimal code to pass.
 ## When to Use
 
 **Always:**
-
 - New features
 - Bug fixes
 - Refactoring
 - Behavior changes
 
 **Exceptions (ask your human partner):**
-
 - Throwaway prototypes
 - Generated code
 - Configuration files
@@ -35,14 +30,13 @@ Thinking "skip TDD just this once"? Stop. That's rationalization.
 
 ## The Iron Law
 
-```text
+```
 NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
 Write code before the test? Delete it. Start over.
 
 **No exceptions:**
-
 - Don't keep it as "reference"
 - Don't "adapt" it while writing tests
 - Don't look at it
@@ -72,13 +66,13 @@ digraph tdd_cycle {
     verify_green -> next;
     next -> red;
 }
-```text
+```
 
 ### RED - Write Failing Test
 
 Write one minimal test showing what should happen.
 
-**Good example:**
+<Good>
 ```typescript
 test('retries failed operations 3 times', async () => {
   let attempts = 0;
@@ -93,13 +87,11 @@ test('retries failed operations 3 times', async () => {
   expect(result).toBe('success');
   expect(attempts).toBe(3);
 });
-
 ```
-
 Clear name, tests real behavior, one thing
+</Good>
 
-**Bad example:**
-
+<Bad>
 ```typescript
 test('retry works', async () => {
   const mock = jest.fn()
@@ -109,13 +101,11 @@ test('retry works', async () => {
   await retryOperation(mock);
   expect(mock).toHaveBeenCalledTimes(3);
 });
-```text
-
+```
 Vague name, tests mock not code
-
+</Bad>
 
 **Requirements:**
-
 - One behavior
 - Clear name
 - Real code (no mocks unless unavoidable)
@@ -124,14 +114,11 @@ Vague name, tests mock not code
 
 **MANDATORY. Never skip.**
 
-Run tests without coverage unless the user explicitly requests coverage tasks; coverage output pollutes context. PM/teammate/CI pressure does not override this rule.
-
 ```bash
 npm test path/to/test.test.ts
 ```
 
 Confirm:
-
 - Test fails (not errors)
 - Failure message is expected
 - Fails because feature missing (not typos)
@@ -144,8 +131,7 @@ Confirm:
 
 Write simplest code to pass the test.
 
-**Good example:**
-
+<Good>
 ```typescript
 async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   for (let i = 0; i < 3; i++) {
@@ -157,11 +143,11 @@ async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   }
   throw new Error('unreachable');
 }
-```text
+```
 Just enough to pass
+</Good>
 
-
-**Bad example:**
+<Bad>
 ```typescript
 async function retryOperation<T>(
   fn: () => Promise<T>,
@@ -174,8 +160,8 @@ async function retryOperation<T>(
   // YAGNI
 }
 ```
-
 Over-engineered
+</Bad>
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
@@ -185,10 +171,9 @@ Don't add features, refactor other code, or "improve" beyond the test.
 
 ```bash
 npm test path/to/test.test.ts
-```text
+```
 
 Confirm:
-
 - Test passes
 - Other tests still pass
 - Output pristine (no errors, warnings)
@@ -200,7 +185,6 @@ Confirm:
 ### REFACTOR - Clean Up
 
 After green only:
-
 - Remove duplication
 - Improve names
 - Extract helpers
@@ -224,7 +208,6 @@ Next failing test for next feature.
 **"I'll write tests after to verify it works"**
 
 Tests written after code pass immediately. Passing immediately proves nothing:
-
 - Might test wrong thing
 - Might test implementation, not behavior
 - Might miss edge cases you forgot
@@ -235,7 +218,6 @@ Test-first forces you to see the test fail, proving it actually tests something.
 **"I already manually tested all the edge cases"**
 
 Manual testing is ad-hoc. You think you tested everything but:
-
 - No record of what you tested
 - Can't re-run when code changes
 - Easy to forget cases under pressure
@@ -246,7 +228,6 @@ Automated tests are systematic. They run the same way every time.
 **"Deleting X hours of work is wasteful"**
 
 Sunk cost fallacy. The time is already gone. Your choice now:
-
 - Delete and rewrite with TDD (X more hours, high confidence)
 - Keep it and add tests after (30 min, low confidence, likely bugs)
 
@@ -255,7 +236,6 @@ The "waste" is keeping code you can't trust. Working code without real tests is 
 **"TDD is dogmatic, being pragmatic means adapting"**
 
 TDD IS pragmatic:
-
 - Finds bugs before commit (faster than debugging after)
 - Prevents regressions (tests catch breaks immediately)
 - Documents behavior (tests show how to use code)
@@ -287,8 +267,6 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
 | "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Coverage is always safer" | Coverage is opt-in; run it only when explicitly requested. |
-| "PM/teammate/CI needs coverage" | Only explicit user request triggers coverage runs. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
 ## Red Flags - STOP and Start Over
@@ -306,8 +284,6 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 - "Already spent X hours, deleting is wasteful"
 - "TDD is dogmatic, I'm being pragmatic"
 - "This is different because..."
-- "I'll run coverage just in case"
-- "PM/teammate/CI asked for coverage"
 
 **All of these mean: Delete code. Start over with TDD.**
 
@@ -316,7 +292,6 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 **Bug:** Empty email accepted
 
 **RED**
-
 ```typescript
 test('rejects empty email', async () => {
   const result = await submitForm({ email: '' });
@@ -324,15 +299,13 @@ test('rejects empty email', async () => {
 });
 ```
 
-### Verify RED
-
+**Verify RED**
 ```bash
 $ npm test
 FAIL: expected 'Email required', got undefined
-```text
+```
 
-### GREEN
-
+**GREEN**
 ```typescript
 function submitForm(data: FormData) {
   if (!data.email?.trim()) {
@@ -342,12 +315,11 @@ function submitForm(data: FormData) {
 }
 ```
 
-### Verify GREEN
-
+**Verify GREEN**
 ```bash
 $ npm test
 PASS
-```text
+```
 
 **REFACTOR**
 Extract validation for multiple fields if needed.
@@ -361,7 +333,6 @@ Before marking work complete:
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
 - [ ] All tests pass
-- [ ] Coverage only run when explicitly requested
 - [ ] Output pristine (no errors, warnings)
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
@@ -386,14 +357,13 @@ Never fix bugs without a test.
 ## Testing Anti-Patterns
 
 When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-
 - Testing mock behavior instead of real behavior
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
 
 ## Final Rule
 
-```text
+```
 Production code → test exists and failed first
 Otherwise → not TDD
 ```
