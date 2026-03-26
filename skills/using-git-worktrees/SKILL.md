@@ -1,9 +1,6 @@
 ---
 name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
-metadata:
-  author: obra
-  version: "1.0"
 ---
 
 # Using Git Worktrees
@@ -26,7 +23,7 @@ Follow this priority order:
 # Check in priority order
 ls -d .worktrees 2>/dev/null     # Preferred (hidden)
 ls -d worktrees 2>/dev/null      # Alternative
-```text
+```
 
 **If found:** Use that directory. If both exist, `.worktrees` wins.
 
@@ -42,7 +39,7 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 If no directory exists and no CLAUDE.md preference:
 
-```text
+```
 No worktree directory found. Where should I create worktrees?
 
 1. .worktrees/ (project-local, hidden)
@@ -60,12 +57,11 @@ Which would you prefer?
 ```bash
 # Check if directory is ignored (respects local, global, and system gitignore)
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```text
+```
 
 **If NOT ignored:**
 
 Per Jesse's rule "Fix broken things immediately":
-
 1. Add appropriate line to .gitignore
 2. Commit the change
 3. Proceed with worktree creation
@@ -100,7 +96,7 @@ esac
 # Create worktree with new branch
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
-```text
+```
 
 ### 3. Run Project Setup
 
@@ -131,7 +127,7 @@ npm test
 cargo test
 pytest
 go test ./...
-```text
+```
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.
 
@@ -140,12 +136,10 @@ go test ./...
 ### 5. Report Location
 
 ```
-
-Worktree ready at `full-path`
-Tests passing (`N` tests, 0 failures)
-Ready to implement `feature-name`
-
-```text
+Worktree ready at <full-path>
+Tests passing (<N> tests, 0 failures)
+Ready to implement <feature-name>
+```
 
 ## Quick Reference
 
@@ -183,7 +177,7 @@ Ready to implement `feature-name`
 
 ## Example Workflow
 
-```text
+```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
 [Check .worktrees/ - exists]
@@ -200,7 +194,6 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
-
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -208,7 +201,6 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
@@ -217,11 +209,10 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-
 - **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
+- **subagent-driven-development** - REQUIRED before executing any tasks
+- **executing-plans** - REQUIRED before executing any tasks
 - Any skill needing isolated workspace
 
 **Pairs with:**
-
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete
-- **executing-plans** or **subagent-driven-development** - Work happens in this worktree
