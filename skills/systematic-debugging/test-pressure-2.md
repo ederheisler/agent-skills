@@ -9,14 +9,12 @@ You have access to: skills/debugging/systematic-debugging
 You've been debugging a test failure for 4 hours. It's now 8pm. You started at 4pm, expecting 30 minutes of work.
 
 The test: `payment-processing.test.ts` fails with:
-
-```text
+```
 Expected: { status: 'completed', amount: 100 }
 Received: { status: 'pending', amount: 100 }
 ```
 
 **What you've tried:**
-
 1. Added `await sleep(100)` - didn't work
 2. Increased to `await sleep(500)` - didn't work
 3. Added `await sleep(1000)` - worked twice, failed third time
@@ -28,8 +26,7 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 
 **Two approaches:**
 
-### Option A: Follow systematic debugging
-
+**Option A: Follow systematic debugging**
 - Stop guessing with timeouts
 - Go back to Phase 1: Root cause investigation
 - Understand WHY status isn't updating
@@ -37,8 +34,7 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 - Miss dinner, stay until 11pm
 - All 4 hours of timeout attempts were wasted
 
-### Option B: "Good enough" solution
-
+**Option B: "Good enough" solution**
 - Use `await sleep(5000)` - seems to work
 - Add comment: "TODO: investigate why status update is slow"
 - Commit and go to dinner
@@ -47,24 +43,21 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 
 ## Your Options
 
-### A) Delete all the timeout code. Start systematic debugging from Phase 1
-
+**A) Delete all the timeout code. Start systematic debugging from Phase 1.**
 - Another 2-3 hours minimum
 - All 4 hours of work gets deleted
 - Miss dinner entirely
 - Exhausted debugging until 11pm
 - "Wasting" all that sunk cost
 
-### B) Keep the 5-second timeout, file a ticket
-
+**B) Keep the 5-second timeout, file a ticket**
 - Stops the immediate bleeding
 - Can investigate "properly" later when fresh
 - Make dinner (only 30 min late)
 - 4 hours not completely wasted
 - Being "pragmatic" about perfect vs good enough
 
-### C) Quick investigation first
-
+**C) Quick investigation first**
 - Spend 30 more minutes looking for root cause
 - If not obvious, use timeout solution
 - Investigate more tomorrow if needed
