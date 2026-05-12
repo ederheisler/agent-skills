@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.5.0"
+  version: "0.6.3"
 ---
 
 # Visual Explainer
@@ -13,6 +13,21 @@ metadata:
 Generate self-contained HTML files for technical diagrams, visualizations, and data tables. Always open the result in the browser. Never fall back to ASCII art when this skill is loaded.
 
 **Proactive table rendering.** When you're about to present tabular data as an ASCII box-drawing table in the terminal (comparisons, audits, feature matrices, status reports, any structured rows/columns), generate an HTML page instead. The threshold: if the table has 4+ rows or 3+ columns, it belongs in the browser. Don't wait for the user to ask — render it as HTML automatically and tell them the file path. You can still include a brief text summary in the chat, but the table itself should be the HTML page.
+
+## Available Commands
+
+Detailed prompt templates in `./commands/`. In Pi, these are slash commands (`/diff-review`). In Claude Code, namespaced (`/visual-explainer:diff-review`). In Codex, use `/prompts:diff-review` (if installed to `~/.codex/prompts/`) or invoke `$visual-explainer` and describe the workflow.
+
+| Command | What it does |
+|---------|-------------|
+| `generate-web-diagram` | Generate an HTML diagram for any topic |
+| `generate-visual-plan` | Generate a visual implementation plan for a feature |
+| `generate-slides` | Generate a magazine-quality slide deck |
+| `diff-review` | Visual diff review with architecture comparison and code review |
+| `plan-review` | Compare a plan against the codebase with risk assessment |
+| `project-recap` | Mental model snapshot for context-switching back to a project |
+| `fact-check` | Verify accuracy of a document against actual code |
+| `share-page` | Deploy an HTML page to Vercel and get a live URL |
 
 ## Workflow
 
@@ -83,6 +98,8 @@ Vary the choice each time. If the last diagram was dark and technical, make the 
 **Mermaid theming:** Always use `theme: 'base'` with custom `themeVariables` so colors match your page palette. Use `layout: 'elk'` for complex graphs (requires the `@mermaid-js/layout-elk` package — see `./references/libraries.md` for the CDN import). Override Mermaid's SVG classes with CSS for pixel-perfect control. See `./references/libraries.md` for full theming guide.
 
 **Mermaid containers:** Always center Mermaid diagrams with `display: flex; justify-content: center;`. Add zoom controls (+/−/reset/expand) to every `.mermaid-wrap` container. Include the click-to-expand JavaScript so clicking the diagram (or the ⛶ button) opens it full-size in a new tab.
+
+**⚠️ Never use bare `<pre class="mermaid">`.** It renders but has no zoom/pan controls — diagrams become tiny and unusable. Always use the full `diagram-shell` pattern from `templates/mermaid-flowchart.html`: the HTML structure (`.diagram-shell` > `.mermaid-wrap` > `.zoom-controls` + `.mermaid-viewport` > `.mermaid-canvas`), the CSS, and the ~200-line JS module for zoom/pan/fit. Copy it wholesale.
 
 **Mermaid scaling:** Diagrams with 10+ nodes render too small by default. For 10-12 nodes, increase `fontSize` in themeVariables to 18-20px and set `INITIAL_ZOOM` to 1.5-1.6. For 15+ elements, don't try to scale — use the hybrid pattern instead (simple Mermaid overview + CSS Grid cards). See "Architecture / System Diagrams" below.
 
@@ -344,16 +361,18 @@ Every diagram is a single self-contained `.html` file. No external assets except
 
 ## Sharing Pages
 
-Share visual explainer pages instantly via Vercel. No account or authentication required.
+Share visual explainer pages instantly via Vercel when a Pi-compatible `vercel-deploy` skill is available. No account or authentication required.
 
-**Usage:**
+**Usage with the installed skill path:**
 ```bash
-bash {{skill_dir}}/scripts/share.sh <html-file>
+bash ~/.pi/agent/skills/visual-explainer/scripts/share.sh <html-file>
 ```
+
+If the skill lives somewhere else, use that install path instead, such as `~/.codex/skills/visual-explainer/scripts/share.sh`, `~/.config/opencode/skill/visual-explainer/scripts/share.sh`, or `./plugins/visual-explainer/scripts/share.sh` from a repository checkout.
 
 **Example:**
 ```bash
-bash {{skill_dir}}/scripts/share.sh ~/.agent/diagrams/my-diagram.html
+bash ~/.pi/agent/skills/visual-explainer/scripts/share.sh ~/.agent/diagrams/my-diagram.html
 
 # Output:
 # ✓ Shared successfully!
@@ -362,19 +381,21 @@ bash {{skill_dir}}/scripts/share.sh ~/.agent/diagrams/my-diagram.html
 ```
 
 **How it works:**
-1. Copies HTML file to temp directory as `index.html`
-2. Deploys via the vercel-deploy skill (zero-auth claimable deployment)
-3. URL is live immediately — works in any browser
+1. Runs the `share.sh` script from the installed `visual-explainer` skill directory
+2. Copies HTML file to temp directory as `index.html`
+3. Deploys via the Pi-compatible `vercel-deploy` skill
+4. URL is live immediately — works in any browser
 
 **Requirements:**
-- vercel-deploy skill (should be pre-installed; if not: `pi install npm:vercel-deploy`)
+- vercel-deploy skill in a standard Pi-compatible skill location (in Pi: `pi install npm:vercel-deploy`)
 
 **Notes:**
 - Deployments are public — anyone with the URL can view
 - Preview deployments have configurable retention (default: 30 days)
 - Claim URL lets you transfer the deployment to your Vercel account
+- Other harnesses can generate and open HTML normally; `/share-page` depends on the Pi-compatible `vercel-deploy` script being available
 
-See `./commands/share.md` for the `/share` command template.
+See `./commands/share-page.md` for the `/share-page` command template.
 
 ## Quality Checks
 
