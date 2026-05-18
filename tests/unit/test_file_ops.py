@@ -132,33 +132,21 @@ def test_remove_skill_returns_false_if_not_exists(mock_dest_dir):
     assert result is False
 
 
-@patch("src.skills.load_plugins")
-def test_load_skills_lists_available_skills(mock_load_plugins, mock_skills_dir):
+def test_load_skills_lists_available_skills(mock_skills_dir):
     """Test loading skills from the configured directory"""
-    # Arrange
-    mock_load_plugins.return_value = []
-
     # Act
     result = skills.load_skills(mock_skills_dir)
 
     # Assert
-    # Expect: Separator (1) + 2 regular skills = 3 items total
-    # Wait, implementation adds separator explicitly.
-    # skills = [] + load_plugins + [separator] + regular_skills
+    assert len(result) == 2
 
-    assert len(result) == 3
-
-    # Filter out separator
-    real_skills = [s for s in result if s.name != ""]
-    assert len(real_skills) == 2
-
-    names = {s.name for s in real_skills}
+    names = {s.name for s in result}
     # "One" comes from frontmatter, "skill-two" comes from dir name default
     assert "One" in names
     assert "skill-two" in names
 
     # Check description
-    skill_one = next(s for s in real_skills if s.name == "One")
+    skill_one = next(s for s in result if s.name == "One")
     assert skill_one.description == "The first skill"
 
 
@@ -169,22 +157,13 @@ def test_get_installed_skills_lists_directories(mock_dest_dir):
     (mock_dest_dir / "skill2").mkdir()
     (mock_dest_dir / "file_not_dir").touch()
 
-    with patch("src.skills.get_installed_plugins", return_value=[]):
-        # Act
-        result = skills.get_installed_skills(mock_dest_dir)
+    # Act
+    result = skills.get_installed_skills(mock_dest_dir)
 
     # Assert
     assert "skill1" in result
     assert "skill2" in result
     assert "file_not_dir" not in result
-
-
-def test_get_installed_skills_includes_plugins(mock_dest_dir):
-    """Test that installed plugins are included in the set"""
-    with patch("src.skills.get_installed_plugins", return_value=["my-plugin"]):
-        result = skills.get_installed_skills(mock_dest_dir)
-
-    assert "my-plugin" in result
 
 
 # --- Error handling tests ---

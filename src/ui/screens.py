@@ -11,7 +11,6 @@ from textual.containers import Container, Horizontal
 from textual.screen import Screen
 from textual.widgets import Label, ListItem, ListView, Static
 
-from .. import plugin
 from ..config import LOG_FILE, logger
 from ..models import SkillInfo
 from ..persistence import get_last_destination, set_last_destination
@@ -404,32 +403,18 @@ class SkillListScreen(Screen):
     def _reinstall_skill(self, skill: SkillInfo) -> tuple[bool, str | None]:
         """Reinstall a single skill. Returns (success, error_message)"""
         try:
-            if skill.is_plugin:
-                logger.info(f"Reinstalling plugin {skill.name}")
-                plugin.remove_plugin(skill)  # type: ignore[arg-type]
-                plugin.install_plugin(skill)  # type: ignore[arg-type]
+            logger.info(f"Reinstalling skill {skill.name}")
+            if install_skill(skill, self.destination):
                 return True, None
-            else:
-                logger.info(f"Reinstalling skill {skill.name}")
-                if install_skill(skill, self.destination):
-                    return True, None
-                return False, "installation failed"
+            return False, "installation failed"
         except Exception as e:
             logger.error(f"Failed to update {skill.name}: {e}")
             return False, str(e)
 
-    def _format_reinstall_success_message(
-        self, skill_count: int, plugin_count: int
-    ) -> str:
+    def _format_reinstall_success_message(self, skill_count: int) -> str:
         """Format success message for reinstall operation"""
-        parts = []
         if skill_count > 0:
-            parts.append(f"{skill_count} skill{'s' if skill_count != 1 else ''}")
-        if plugin_count > 0:
-            parts.append(f"{plugin_count} plugin{'s' if plugin_count != 1 else ''}")
-
-        if parts:
-            return f"Successfully updated {' + '.join(parts)}"
+            return f"Successfully updated {skill_count} skill{'s' if skill_count != 1 else ''}"
         return "No updates needed (or installed items not found in source)"
 
     def action_reinstall_all(self) -> None:
@@ -447,17 +432,13 @@ class SkillListScreen(Screen):
 
         errors = []
         skill_success_count = 0
-        plugin_success_count = 0
 
         # Iterate over all available skills to find the ones that are installed
         for skill in self.available_skills:
             if skill.dir_name in self.installed:
                 success, error = self._reinstall_skill(skill)
                 if success:
-                    if skill.is_plugin:
-                        plugin_success_count += 1
-                    else:
-                        skill_success_count += 1
+                    skill_success_count += 1
                 else:
                     errors.append(f"{skill.name}: {error}")
 
@@ -468,17 +449,14 @@ class SkillListScreen(Screen):
         if errors:
             error_details = "\n".join(errors)
             logger.error(f"Update failed for {len(errors)} items:\n{error_details}")
-            total_success = skill_success_count + plugin_success_count
             self.notify(
-                f"Updated {total_success} items.\n\nFailed:\n{error_details}",
+                f"Updated {skill_success_count} items.\n\nFailed:\n{error_details}",
                 title="Update Complete with Errors",
                 severity="error",
                 timeout=10.0,
             )
         else:
-            msg = self._format_reinstall_success_message(
-                skill_success_count, plugin_success_count
-            )
+            msg = self._format_reinstall_success_message(skill_success_count)
             self.notify(
                 msg, title="Update Complete", severity="information", timeout=3.0
             )
@@ -529,25 +507,16 @@ class SkillListScreen(Screen):
     ) -> tuple[bool, str | None]:
         """Process install or remove operation. Returns (success, error_message)"""
         try:
-            if skill.is_plugin:
-                if should_remove:
-                    logger.info(f"Removing plugin {skill.name}")
-                    plugin.remove_plugin(skill)  # type: ignore[arg-type]
-                else:
-                    logger.info(f"Installing plugin {skill.name}")
-                    plugin.install_plugin(skill)  # type: ignore[arg-type]
-                return True, None
+            if should_remove:
+                logger.info(f"Removing skill {skill.name}")
+                if remove_skill(skill, self.destination):
+                    return True, None
+                return False, "delete failed"
             else:
-                if should_remove:
-                    logger.info(f"Removing skill {skill.name}")
-                    if remove_skill(skill, self.destination):
-                        return True, None
-                    return False, "delete failed"
-                else:
-                    logger.info(f"Installing skill {skill.name}")
-                    if install_skill(skill, self.destination):
-                        return True, None
-                    return False, "install failed"
+                logger.info(f"Installing skill {skill.name}")
+                if install_skill(skill, self.destination):
+                    return True, None
+                return False, "install failed"
         except Exception as e:
             logger.error(f"Error processing {skill.name}: {e}")
             return False, str(e)

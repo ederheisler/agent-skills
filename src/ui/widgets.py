@@ -20,7 +20,6 @@ class SkillItem(ListItem):
         self.is_installed = is_installed
         self.selected = False
         self.is_reinstall = False
-        self.is_plugin = skill.is_plugin
 
         text = self._format_skill_text()
         super().__init__(Label(text))

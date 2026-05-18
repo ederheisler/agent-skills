@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Set
 
 from .models import SkillInfo
-from .plugin import get_installed_plugins, load_plugins
 from .utils import load_frontmatter
 
 logger = logging.getLogger(__name__)
@@ -32,26 +31,15 @@ def get_skill_info(skill_dir: Path) -> SkillInfo:
 
 
 def load_skills(skills_dir: Path) -> List[SkillInfo]:
-    """List all available skills, sorted by name, with plugins first"""
+    """List all available skills, sorted by name"""
     skills = []
 
-    # Load plugins dynamically
-    plugins = load_plugins()
-    skills.extend(plugins)
-
-    # Add separator
-    separator_skill = SkillInfo(name="", description="", path=Path(""), dir_name="")
-    skills.append(separator_skill)
-
-    # Add regular skills (sorted by name)
-    regular_skills = []
     if skills_dir.exists():
         for skill_dir in sorted(skills_dir.iterdir()):
             if skill_dir.is_dir():
-                regular_skills.append(get_skill_info(skill_dir))
+                skills.append(get_skill_info(skill_dir))
 
-    regular_skills.sort(key=lambda s: s.name)
-    skills.extend(regular_skills)
+    skills.sort(key=lambda s: s.name)
 
     return skills
 
@@ -61,9 +49,6 @@ def get_installed_skills(destination: Path) -> Set[str]:
     installed = set()
     if destination.exists():
         installed.update({d.name for d in destination.iterdir() if d.is_dir()})
-
-    # Add installed plugins
-    installed.update(get_installed_plugins())
 
     return installed
 
