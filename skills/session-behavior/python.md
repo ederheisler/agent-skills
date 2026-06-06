@@ -76,6 +76,19 @@ async def get_item(item_id: int):
 ```
 Routers delegate; services decide. Validation, DB queries, and domain rules belong in the service layer. Services raise `HTTPException` directly — let them bubble up through the router.
 
+**Naive or deprecated datetime usage** — two rules, no exceptions:
+- Never `datetime.utcnow()` — it returns a naive datetime with no tzinfo, silently wrong when compared to aware datetimes. Use `datetime.now(datetime.UTC)` instead.
+- Never `timezone.utc` — use the `datetime.UTC` alias (Python 3.11+). If the project targets < 3.11, use `timezone.utc` and add a comment, but flag the version constraint.
+
+```python
+# BAD
+datetime.utcnow()
+datetime.now(timezone.utc)
+
+# GOOD
+datetime.now(datetime.UTC)
+```
+
 **`os.path` for new path code** — `pathlib.Path` is the modern replacement. Push back if the file is new or being significantly refactored. Don't rewrite existing `os.path` calls you aren't touching.
 
 **`print()` for logging in server/service code** — use the `logging` module. `print()` is fine in scripts, CLIs, and notebooks.
