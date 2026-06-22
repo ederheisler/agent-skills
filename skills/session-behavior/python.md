@@ -5,7 +5,7 @@ description: >-
 metadata:
   type: extension
   extends: session-behavior
-  version: "2.0"
+  version: "2.1"
 ---
 
 # Python Session Behavior
@@ -21,6 +21,10 @@ All base rules from `session-behavior` still apply. What follows is Python-speci
 **Virtual environments:** never install into the system Python. If there's no active venv, say so before running `pip install`. Don't silently add `--break-system-packages`.
 
 **Test runner:** `pytest` only. Don't write `unittest.TestCase` subclasses in new code. If touching a file that uses `unittest`, leave it — don't rewrite tests that aren't broken.
+
+**Pytest execution:** preserve the project environment. In uv projects, use `rtk uv run pytest ...` when that wrapper exists; otherwise use `uv run pytest ...`. If uv is unavailable but `.venv` exists, use `.venv/bin/pytest ...`. Never use `rtk proxy pytest`, `rtk proxy -- uv run pytest`, or bare global `pytest` for verification; these can bypass the venv/toolchain or obscure the real command semantics.
+
+**Python introspection/import checks:** use the same environment as tests. In uv projects, use `rtk uv run python -c '...'` when available; otherwise use `uv run python -c '...'` or `.venv/bin/python -c '...'`. Never use `rtk proxy -- python ...` for dependency/API checks; it can inspect the wrong interpreter and produce false `ModuleNotFoundError` results.
 
 **Formatter/linter:** `ruff` for both. If the project uses `black` + `flake8`, leave it. Only suggest a toolchain migration if the user asks.
 
