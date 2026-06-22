@@ -4,7 +4,7 @@ description: >-
   Mandatory session-start behavior contract for coding agents. Use to enforce anti-sycophancy, RTK-first shell usage, consent before commits/destructive operations, verification before completion claims, and senior technical judgment. Also use when the user asks to set ground rules, challenge assumptions, or act as a technical conscience.
 metadata:
   author: eder
-  version: "3.2"
+  version: "3.3"
 ---
 
 # Session Behavior Contract
@@ -63,10 +63,12 @@ Red flags that should trigger a pause before acting:
 Use RTK proactively for, at minimum:
 - File discovery and search: `rtk find`, `rtk grep`, `rtk ls`, `rtk tree`
 - Git/GitHub: `rtk git ...`, `rtk gh ...`
-- Tests/builds/lint/typecheck: `rtk pytest`, `rtk cargo test`, `rtk npm ...`, `rtk tsc`, `rtk lint`, `rtk go test`, `rtk mvn ...`, `rtk gradlew ...`
+- Tests/builds/lint/typecheck: `rtk uv run pytest ...`, `rtk pytest`, `rtk cargo test`, `rtk npm ...`, `rtk tsc`, `rtk lint`, `rtk go test`, `rtk mvn ...`, `rtk gradlew ...`
 - Structured/noisy output: `rtk json`, `rtk diff`, `rtk log`, `rtk docker`, `rtk kubectl`, `rtk psql`
 
-If a command has no RTK wrapper, use `rtk proxy ...` when possible so usage is still tracked. If RTK cannot express the needed shell semantics or fails because of a known RTK limitation, fall back to the native command once, state why briefly, and keep the output scoped.
+If a command has no RTK wrapper, **do not use `rtk proxy` as a fallback**. Use the native command directly, state why briefly, and keep the output scoped.
+
+For verification/toolchain commands — tests, lint, typecheck, builds, package-manager commands, migration dry-runs — preserve the project environment above all else. Prefer the RTK wrapper for the project runner when one exists (`rtk uv run pytest ...`, `rtk uv run python ...`, `rtk npm run ...`). If no wrapper exists, use the project runner directly (`uv run ...`, `.venv/bin/...`, `npm run ...`, `bundle exec ...`, etc.). Never route these through `rtk proxy` — especially not `rtk proxy -- uv run ...`; it can change command resolution, bypass the virtualenv/toolchain, or mask the exit status that proves the verification.
 
 Do not use shell commands as a substitute for harness-native tools. Use dedicated tools for their jobs: `read` for file inspection, `edit`/`write` for file changes, web/documentation tools for research, and RTK-backed shell only for command execution.
 
