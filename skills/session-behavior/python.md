@@ -22,11 +22,11 @@ All base rules from `session-behavior` still apply. What follows is Python-speci
 
 **Test runner:** `pytest` only. Don't write `unittest.TestCase` subclasses in new code. If touching a file that uses `unittest`, leave it — don't rewrite tests that aren't broken.
 
-**Pytest execution:** preserve the project environment. In uv projects, use `rtk uv run pytest ...` when that wrapper exists; otherwise use `uv run pytest ...`. If uv is unavailable but `.venv` exists, use `.venv/bin/pytest ...`. Never use `rtk proxy pytest`, `rtk proxy -- uv run pytest`, or bare global `pytest` for verification; these can bypass the venv/toolchain or obscure the real command semantics.
+**Pytest execution:** preserve the project environment. In uv projects, use `rtk test uv run pytest ...` for compact output while preserving the uv environment; otherwise use `uv run pytest ...`. If uv is unavailable but `.venv` exists, use `rtk test .venv/bin/pytest ...` or `.venv/bin/pytest ...`. Avoid `rtk pytest` in uv projects unless you have explicitly verified it is using the project environment and its summary is truthful; observed behavior includes resolving global pytest and printing misleading `Pytest: No tests collected` despite passing venv pytest. Never use `rtk proxy pytest`, `rtk proxy -- uv run pytest`, or bare global `pytest` for verification; these can bypass the venv/toolchain or obscure the real command semantics.
 
 **Python introspection/import checks:** use the same environment as tests. In uv projects, use `rtk uv run python -c '...'` when available; otherwise use `uv run python -c '...'` or `.venv/bin/python -c '...'`. Never use `rtk proxy -- python ...` for dependency/API checks; it can inspect the wrong interpreter and produce false `ModuleNotFoundError` results.
 
-**Formatter/linter:** `ruff` for both. If the project uses `black` + `flake8`, leave it. Only suggest a toolchain migration if the user asks.
+**Formatter/linter:** `ruff` for both. In uv projects, run Ruff through the project runner: `rtk uv run ruff check ...` and `rtk uv run ruff format --check ...`. Avoid `rtk ruff ...` unless you have verified it uses the intended Ruff version; it may load `pyproject.toml` but still use a global Ruff binary. If the project uses `black` + `flake8`, leave it. Only suggest a toolchain migration if the user asks.
 
 ---
 
