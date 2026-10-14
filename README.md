@@ -13,6 +13,7 @@ npx skills update
 | Skill | Purpose |
 |---|---|
 | `graphify-setup` | Set up, migrate, and merge-manage Graphify in a repository. |
+| `wtf` | Explains the agent's last response when you invoke `/wtf`: missing rationale, context, terms, and corrections. |
 
 ## License
 
