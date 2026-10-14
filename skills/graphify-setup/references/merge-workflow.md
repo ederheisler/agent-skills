@@ -9,7 +9,7 @@
 
 ## When these rules apply
 
-Use this reference when adding persistent Graphify working rules to a repository's generic `AGENTS.md`, or when a user asks to merge branches in a project that already uses Graphify. Do not read or create harness-named context files. Preserve existing `AGENTS.md` content and merge equivalent guidance rather than duplicating it. Do not initialize Graphify solely to enable these merge rules; a direct, explicit setup request is different.
+Use this reference when adding persistent Graphify working rules to a repository's `AGENTS.md`, or when a user asks to merge branches in a project that already uses Graphify. Keep the rules in `AGENTS.md` only; when Claude is used, `CLAUDE.md` imports them with `@AGENTS.md` (see the setup instructions) instead of repeating them. Do not create other harness-named context files. Preserve existing `AGENTS.md` and `CLAUDE.md` content and merge equivalent guidance rather than duplicating it. Do not initialize Graphify solely to enable these merge rules; a direct, explicit setup request is different.
 
 Add the guidance below to `AGENTS.md` without changing unrelated instructions. Keep routine updates and merge hooks bounded and deterministic. The full-build reference applies only to explicitly requested builds, not ordinary integration.
 

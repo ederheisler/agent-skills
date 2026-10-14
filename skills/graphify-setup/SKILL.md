@@ -1,8 +1,8 @@
 ---
 name: graphify-setup
-description: Installs Graphify in a repository for the requested available OMP, Pi, Codex, and Claude harnesses, completes a full project graph build, and preserves existing project configuration. Use when asked to set up Graphify and build the repository graph.
+description: Installs Graphify in a repository for Claude Code when available and for the OMP, Pi, and Codex harnesses (agents-standard), completes a full project graph build, migrates existing setups, and preserves existing project configuration. Use when asked to set up Graphify and build the repository graph.
 author: Eder Heisler
-version: "1.6"
+version: "1.7"
 ---
 
 # Graphify Setup
@@ -13,8 +13,8 @@ The full-build workflow applies to explicitly requested initial setup, not routi
 
 **Migration mode** applies when the repository already uses Graphify (`graphify-out/graph.json` exists) and the user asks to set it up again, update it, or apply the new workflow. Do not reinstall skills, ask for harness selection, or run a full build. Run only [the migration steps](references/setup-project.md#7-migrate-an-existing-setup), then verify and report. Never commit or push without explicit authorization.
 
-1. Check that the active repository is the requested target and inspect existing Graphify state before changing it. Read only the generic `AGENTS.md` for persistent project guidance; do not read or create a harness-named context file.
-2. Follow [project setup instructions](references/setup-project.md) for CLI installation, available-harness discovery, explicit user selection, project skill installation, hook integration, ignore rules, and persistent guidance. Ask which detected available harnesses to initialize, offering `All` (all detected available targets only) or one or more named available targets; install only the explicit selection. Report the available and unavailable targets.
+1. Check that the active repository is the requested target and inspect existing Graphify state before changing it. Read `AGENTS.md` and, when present, `CLAUDE.md` for persistent project guidance. Claude Code reads `CLAUDE.md`, not `AGENTS.md`, so persistent rules reach it through a `CLAUDE.md` that imports `@AGENTS.md` (see the setup instructions); do not create other harness-named context files.
+2. Follow [project setup instructions](references/setup-project.md) for CLI installation, available-harness discovery, target selection, project skill installation, hook integration, ignore rules, and persistent guidance. Default to Claude when it is available, or Claude plus the agents-standard targets (OMP, Pi, Codex) when several are available; show that default and the unavailable targets, and let the user change it. Install only the confirmed selection.
 3. Read each install-reported skill file only after verifying it exists. Preserve existing Graphify skill customizations and follow the installed skill's runtime and corpus instructions.
 4. For explicitly requested initial setup, complete the full build using [runtime, build, and verification instructions](references/full-build.md). Perform semantic extraction through the active host agent, not a headless API-key-dependent substitute. Handle warnings and errors without dropping project-owned source or claiming a partial build is complete.
 5. If adding or applying persistent merge rules, use [the Graphify merge workflow](references/merge-workflow.md). Keep any merge paused until bounded graph recovery, deterministic regeneration, staging, and unresolved-file checks are complete. Limit recovery to actual merge changed/deleted source paths and graph metadata/provenance. Use mechanical preservation/deletion checks, not source-body reads or source/code/query investigation. Missing/ambiguous provenance is a reported blocker, not permission to widen scope. Require bounded worker contracts and stop out-of-scope workers. Do not add semantic completeness gates or optional work after recovery acceptance. Broader semantic investigation/rebuilding/enrichment requires separate explicit authorization.

@@ -2,10 +2,11 @@
 name: wtf
 description: >-
   Explains the last agent response, supplying missing rationale, context, or terminology
-  and correcting errors. Use only when the user explicitly invokes /wtf or asks
-  to use the wtf skill; do not trigger for ordinary questions or incidental mentions.
+  and correcting errors. Optional `tldr` flag gives a short version. Use only when the
+  user explicitly invokes /wtf or asks to use the wtf skill; do not trigger for ordinary
+  questions or incidental mentions.
 author: Eder Heisler
-version: "1.1"
+version: "1.2"
 ---
 
 # Explain the response
@@ -24,6 +25,16 @@ Give the missing substance, not just easier wording:
 - If the target response or context is missing, ask only for the missing text or context. Do not pretend to know it.
 - Give a user-facing explanation of the rationale and relevant evidence, not private chain-of-thought or a narration of internal reasoning steps.
 
+## Optional `tldr` flag
+
+`/wtf tldr` (also `/wtf --tldr` or an explicit request for a short explanation) replaces the full explanation with a short one. It combines with a topic: `/wtf tldr <topic>`. Without the flag, behave as above.
+
+- Two to four sentences, roughly 80 words at most. No headings, bullets, or tables.
+- Lead with what was proposed or decided and the single reason that matters most. If options were offered, name the recommended one and why.
+- Define a term only when the response is unintelligible without it.
+- Keep corrections and any assumption or unknown that would change the conclusion; drop everything else. Short must not mean wrong or evasive.
+- End by saying a plain `/wtf` gives the full explanation, only if something material was left out.
+
 ## Example
 
 Given context: "A producer sends 1,000 items/second, each API request carries one batch, and the service limit is 50 requests/second. Choose batch size 20 or 50." The agent's response was: "Use 50 to leave room."
@@ -31,3 +42,5 @@ Given context: "A producer sends 1,000 items/second, each API request carries on
 **Before:** “Use 50 to leave room.”
 
 **After:** “Use batches of 50. At 1,000 items/second, that is 20 requests/second, below the service's 50-request/second limit. Batches of 20 would require 50 requests/second, using the full limit and leaving no headroom. This assumes the stated item rate and one-request-per-batch behavior hold.”
+
+**With `tldr`:** “Use batches of 50: that is 20 requests/second against a 50/second limit, so there is headroom; batches of 20 would use the whole limit. Assumes one request per batch.”

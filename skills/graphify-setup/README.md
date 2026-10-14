@@ -11,8 +11,8 @@ npx skills update graphify-setup
 
 ## What it does
 
-- **Initial setup**: installs the `graphifyy` CLI, installs the Graphify skill for the harnesses you pick (OMP, Pi, Codex, Claude), adds ignore rules, registers the `graph.json` merge driver, and runs a full build.
-- **Migration mode**: for repositories that already use Graphify. Removes the auto-rebuild git hooks (keeps the merge driver), gitignores and untracks `graphify-out/manifest.json`, and updates `AGENTS.md`. No reinstall, no full build.
+- **Initial setup**: installs the `graphifyy` CLI, installs the Graphify skill for Claude when it is available (default), or for Claude plus the agents-standard harnesses (OMP, Pi, Codex) when several are available, adds ignore rules, registers the `graph.json` merge driver, runs a full build, and makes `CLAUDE.md` import `@AGENTS.md` so Claude Code sees the same persistent rules.
+- **Migration mode**: for repositories that already use Graphify. Removes the auto-rebuild git hooks (keeps the merge driver), gitignores and untracks `graphify-out/manifest.json`, updates `AGENTS.md`, and makes `CLAUDE.md` import `@AGENTS.md` when Claude is used. No reinstall, no full build.
 - **Merge workflow**: bounded, deterministic recovery when a merge conflicts on Graphify artifacts.
 
 ## Workflow it enforces
