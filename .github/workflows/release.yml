@@ -1,0 +1,33 @@
+name: Release
+
+# Every push to main releases a new version, except pushes that only change
+# VERSION or CHANGELOG.md (the release commit itself). Releases run one at a
+# time and are never cancelled half way.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - VERSION
+      - CHANGELOG.md
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/release.sh
