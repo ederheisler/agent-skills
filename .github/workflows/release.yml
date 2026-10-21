@@ -1,14 +1,14 @@
 name: Release
 
-# Every push to main releases a new version, except pushes that only change
-# VERSION or CHANGELOG.md (the release commit itself). Releases run one at a
-# time and are never cancelled half way.
+# Every push to main runs the release script. The script releases only when
+# skills/ has a net change since the latest vX.Y.Z tag (see release.sh for the
+# version rules), so pushes that only touch root docs, CI, VERSION or
+# CHANGELOG.md release nothing. They still run so that a missing GitHub Release
+# for the latest tag gets published. Releases run one at a time and are never
+# cancelled half way.
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - VERSION
-      - CHANGELOG.md
 
 concurrency:
   group: release

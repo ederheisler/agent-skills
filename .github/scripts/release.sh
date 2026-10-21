@@ -7,12 +7,20 @@
 #                         release notes, and CHANGELOG.md diff. No fetch, no gh
 #                         call, no change to the repository, no commit/tag/push/release.
 #
-# Version rules (VERSION is the repository version, tags are the release record):
-#   - No version tag yet: release the version in VERSION (first release).
-#   - VERSION is ahead of the latest tag: release VERSION as written.
-#   - Otherwise: release the latest tag with its patch number plus one.
-# Commits that only touch VERSION or CHANGELOG.md never count as changes, so a
-# checkout with no other commit since the latest tag releases nothing.
+# Version rules (tags are the release record; the latest vMAJOR.MINOR.PATCH tag
+# is authoritative and VERSION is only written to match it):
+#   - Only files under skills/ trigger a release. skills/ at HEAD is compared
+#     with the latest tag: no net difference (a change that was reverted
+#     included) releases nothing. Root docs, CI, VERSION and CHANGELOG.md never
+#     release, whatever their commit messages say.
+#   - No version tag yet: when skills/ has files, release the version in VERSION.
+#   - Otherwise bump the latest tag by the highest level found in the commits
+#     since it that touch skills/ (a merge commit counts only when it changes
+#     skills/ relative to every parent):
+#       major  header "type!:" or "type(scope)!:", or a "BREAKING CHANGE:" or
+#              "BREAKING-CHANGE:" line in the body       MAJOR+1.0.0
+#       minor  header "feat:" or "feat(scope):"           MAJOR.MINOR+1.0
+#       patch  any other message, prefixed or not         MAJOR.MINOR.PATCH+1
 #
 # Failure recovery: the release commit and tag are pushed together (atomic),
 # then the GitHub Release is created. If that last step fails, the next run
@@ -22,11 +30,15 @@ set -euo pipefail
 BOT_NAME='github-actions[bot]'
 BOT_EMAIL='41898282+github-actions[bot]@users.noreply.github.com'
 SEMVER_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
+MAJOR_HEADER_RE='^[A-Za-z]+(\([^)]*\))?!:'
+MAJOR_BODY_RE=$'\n(BREAKING CHANGE|BREAKING-CHANGE):'
+MINOR_HEADER_RE='^feat(\([^)]*\))?:'
 MAX_ATTEMPTS=5
 RETRY=0
 PREV_TAG=''
 NEW_TAG=''
 NEW_VERSION=''
+BUMP=''
 OUT=''
 
 die() {
@@ -46,12 +58,6 @@ repo_url() {
 latest_tag() {
   git tag --list 'v[0-9]*' | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; } |
     sort -t. -k1.2,1n -k2,2n -k3,3n | tail -n1
-}
-
-# True when $1 is a higher MAJOR.MINOR.PATCH than $2.
-ver_gt() {
-  [ "$1" != "$2" ] &&
-    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)" = "$1" ]
 }
 
 # Strip leading and trailing blank lines from stdin.
@@ -75,38 +81,76 @@ release_exists() {
   die "Cannot check for a GitHub Release for $1: $out"
 }
 
+# SHAs of the commits since the latest tag that changed skills/. A merge counts
+# only when its result differs from every parent (conflict resolution or other
+# edits made in the merge); a clean merge is represented by the commits it
+# brought in.
+skill_commits() {
+  local log sha parents
+  log=$(git log --full-history --format='%H %P' ${PREV_TAG:+"$PREV_TAG..HEAD"} -- skills)
+  while read -r sha parents; do
+    [ -n "$sha" ] || continue
+    case $parents in
+      *' '*) [ -n "$(git diff-tree --cc --no-commit-id --name-only -r "$sha" -- skills)" ] || continue ;;
+    esac
+    printf '%s\n' "$sha"
+  done <<<"$log"
+}
+
 # Decide what to release. Sets NEW_TAG (empty when there is nothing to release),
-# NEW_VERSION and PREV_TAG, and writes $OUT/{VERSION,CHANGELOG.md,NOTES.md}.
+# NEW_VERSION, PREV_TAG and BUMP, and writes $OUT/{VERSION,CHANGELOG.md,NOTES.md}.
 plan() {
-  local current prev commits url today compare src unreleased pre rest
-  local major minor patch sha subject
+  local commits level url today compare src unreleased pre rest
+  local major minor patch sha msg header body rc
 
   NEW_TAG=''
-  [ -f VERSION ] || die 'VERSION file is missing'
-  current=$(tr -d '[:space:]' <VERSION)
-  [[ $current =~ $SEMVER_RE ]] || die "VERSION must be MAJOR.MINOR.PATCH, got '$current'"
-
   PREV_TAG=$(latest_tag)
-  commits=$(git log --no-merges --full-history --format='%H%x09%s' \
-    ${PREV_TAG:+"$PREV_TAG..HEAD"} -- . ':(exclude)VERSION' ':(exclude)CHANGELOG.md')
-  [ -n "$commits" ] || return 0
+
+  if [ -n "$PREV_TAG" ]; then
+    rc=0
+    git diff --quiet "$PREV_TAG" HEAD -- skills || rc=$?
+    case $rc in
+      0) return 0 ;;
+      1) ;;
+      *) die "Cannot compare skills/ with $PREV_TAG" ;;
+    esac
+  else
+    [ -n "$(git ls-tree -r --name-only HEAD -- skills)" ] || return 0
+  fi
+
+  url=$(repo_url)
+  commits=$(skill_commits)
+  level='patch'
+  : >"$OUT/commits"
+  while read -r sha; do
+    [ -n "$sha" ] || continue
+    msg=$(git log -1 --format=%B "$sha")
+    header=${msg%%$'\n'*}
+    body=${msg#"$header"}
+    if [[ $header =~ $MAJOR_HEADER_RE || $body =~ $MAJOR_BODY_RE ]]; then
+      level=major
+    elif [ "$level" = patch ] && [[ $header =~ $MINOR_HEADER_RE ]]; then
+      level=minor
+    fi
+    printf '%s\n' "- $header ([\`${sha:0:7}\`]($url/commit/$sha))" >>"$OUT/commits"
+  done <<<"$commits"
 
   if [ -z "$PREV_TAG" ]; then
-    NEW_VERSION=$current
+    [ -f VERSION ] || die 'VERSION file is missing'
+    NEW_VERSION=$(tr -d '[:space:]' <VERSION)
+    [[ $NEW_VERSION =~ $SEMVER_RE ]] || die "VERSION must be MAJOR.MINOR.PATCH, got '$NEW_VERSION'"
+    BUMP='first release'
   else
-    prev=${PREV_TAG#v}
-    if ver_gt "$current" "$prev"; then
-      NEW_VERSION=$current
-    else
-      [ "$current" = "$prev" ] ||
-        echo "::warning::VERSION ($current) is behind the latest tag $PREV_TAG; bumping from the tag" >&2
-      IFS=. read -r major minor patch <<<"$prev"
-      NEW_VERSION="$major.$minor.$((patch + 1))"
-    fi
+    IFS=. read -r major minor patch <<<"${PREV_TAG#v}"
+    case $level in
+      major) NEW_VERSION="$((10#$major + 1)).0.0" ;;
+      minor) NEW_VERSION="$((10#$major)).$((10#$minor + 1)).0" ;;
+      *) NEW_VERSION="$((10#$major)).$((10#$minor)).$((10#$patch + 1))" ;;
+    esac
+    BUMP="$level bump"
   fi
   NEW_TAG="v$NEW_VERSION"
 
-  url=$(repo_url)
   today=$(date -u +%F)
   if [ -n "$PREV_TAG" ]; then
     compare="$url/compare/$PREV_TAG...$NEW_TAG"
@@ -137,9 +181,7 @@ plan() {
       printf '%s\n\n' "$unreleased"
     fi
     printf '### Commits\n\n'
-    while IFS=$'\t' read -r sha subject; do
-      printf '%s\n' "- $subject ([\`${sha:0:7}\`]($url/commit/$sha))"
-    done <<<"$commits"
+    cat "$OUT/commits"
     printf '\nFull changelog: %s\n' "$compare"
   } >"$OUT/NOTES.md"
 
@@ -184,10 +226,10 @@ attempt() {
 
   plan
   if [ -z "$NEW_TAG" ]; then
-    echo "Nothing to release: no commits since ${PREV_TAG:-the start} other than VERSION/CHANGELOG.md updates."
+    echo "Nothing to release: no net change under skills/ since ${PREV_TAG:-the start}."
     return 0
   fi
-  echo "Releasing $NEW_TAG (previous tag: ${PREV_TAG:-none})"
+  echo "Releasing $NEW_TAG ($BUMP; previous tag: ${PREV_TAG:-none})"
 
   base=$(git rev-parse HEAD)
   cp "$OUT/VERSION" VERSION
@@ -225,10 +267,10 @@ main() {
   if [ "$dry_run" = 1 ]; then
     plan
     if [ -z "$NEW_TAG" ]; then
-      echo "Dry run: nothing to release since ${PREV_TAG:-the start}."
+      echo "Dry run: nothing to release, no net change under skills/ since ${PREV_TAG:-the start}."
       return 0
     fi
-    echo "Dry run: would release $NEW_TAG (previous tag: ${PREV_TAG:-none})"
+    echo "Dry run: would release $NEW_TAG ($BUMP; previous tag: ${PREV_TAG:-none})"
     printf '\n== VERSION ==\n%s\n' "$(cat "$OUT/VERSION")"
     printf '\n== Release notes ==\n'
     cat "$OUT/NOTES.md"

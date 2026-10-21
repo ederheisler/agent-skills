@@ -17,9 +17,9 @@ npx skills update
 
 ## Releases
 
-The repository version is in [`VERSION`](VERSION). Release notes are in [`CHANGELOG.md`](CHANGELOG.md) and on [GitHub Releases](https://github.com/ederheisler/agent-skills/releases).
+The latest `vX.Y.Z` tag is the source of truth. [`VERSION`](VERSION) is updated from it automatically. `1.2.0` is the published baseline. Release notes are in [`CHANGELOG.md`](CHANGELOG.md) and on [GitHub Releases](https://github.com/ederheisler/agent-skills/releases).
 
-Pushes to `main` release automatically, except changes limited to `VERSION` and `CHANGELOG.md`. The first release is `1.2.0`. Later releases increment the patch number. Queued pushes can share a release. No manual release step or npm publication is needed.
+Only changes under `skills/**` release, including prose edits. Breaking changes (`type!:` or a `BREAKING CHANGE:` trailer) bump major, `feat:` bumps minor, and everything else bumps patch. The highest bump wins. For example, `1.2.0` becomes `2.0.0`, `1.3.0`, or `1.2.1`. Root docs, CI, `VERSION`, and metadata commits do not release or tag. Changes that are made and then reverted do not release. The workflow can run on every push to `main`, but it does nothing without a net skill change. Queued pushes share one release. No manual release step or npm publication is needed. The full schema is in [`RELEASES.md`](RELEASES.md).
 
 Each skill keeps its own version in its own metadata. These versions do not depend on the repository version.
 
