@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/ederheisler/agent-skills/releases/tag/v1.2.1) - 2026-10-22
+
+### Commits
+
+- fix: tighten Graphify setup and explanation workflows ([`9472c51`](https://github.com/ederheisler/agent-skills/commit/9472c51c48709ce931f4de60f7ba93bcfd60f1fd))
+
+Full changelog: https://github.com/ederheisler/agent-skills/compare/v1.2.0...v1.2.1
+
 ## [1.2.0](https://github.com/ederheisler/agent-skills/releases/tag/v1.2.0) - 2026-10-21
 
 - Start automated release tracking for this repository. The root `VERSION` file holds the repository version, and this file holds the release notes.
